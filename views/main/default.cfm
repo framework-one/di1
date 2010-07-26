@@ -1,2 +1,2 @@
 ﻿Welcome to InjectOne!
-<cfset bf = new ioc( expandPath( '/' ) ) />
+<cfset bf = new ioc( '/model/data,/model/services' ) />
