@@ -57,7 +57,8 @@ component {
 	// PRIVATE METHODS
 	
 	private struct function cleanMetadata( string cfc ) {
-		return { };
+		var md = getComponentMetadata( cfc );
+		return md;
 	}
 	
 	
@@ -70,16 +71,18 @@ component {
 			return replace( left( rootRelativePath, len( rootRelativePath ) - 4 ), '/', '.', 'all' );
 		} else {
 			// need to go off looking for mappings
+			throw 'not implemented';
 		}
 	}
 	
 	
 	private void function discoverBeans( string folders ) {
 		var folderArray = listToArray( folders );
-		var n = arrayLen( folderArray );
 		variables.pathMapCache = { };
-		for ( var i = 1; i <= n; ++i ) {
-			discoverBeansInFolder( folderArray[ i ] );
+		var f = 0;
+		for ( f in folderArray ) {
+			f = directoryExists( f ) ? f : expandPath( f );
+			discoverBeansInFolder( f );
 		}
 		writeDump( variables.beanInfo );
 	}
@@ -96,6 +99,11 @@ component {
 			var metadata = { path = cfcPath, cfc = dottedPath, metadata = cleanMetadata( dottedPath ) };
 			variables.beanInfo[ beanName ] = metadata;
 		}
+	}
+	
+	
+	private any function resolveBean( string beanName ) {
+		throw 'not implemented';
 	}
 	
 	
