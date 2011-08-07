@@ -1,5 +1,5 @@
 ﻿/*
-	Copyright (c) 2010, Sean Corfield
+	Copyright (c) 2010-2011, Sean Corfield
 
 	Licensed under the Apache License, Version 2.0 (the "License");
 	you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ component {
 
 	// CONSTRUCTOR
 	
-	public any function init( string folders, struct config = structNew() ) { // TODO: ugh! use { } when CFB supports that
+	public any function init( string folders, struct config = { } ) {
 		variables.beanInfo = { };
 		variables.beanCache = { };
 		variables.config = config;
@@ -48,8 +48,7 @@ component {
 	
 	public void function load() {
 		variables.beanCache = { };
-		var key = 0; // TODO: move into for() when CFB supports that
-		for ( key in variables.beanInfo ) {
+		for ( var key in variables.beanInfo ) {
 			getBean( key );
 		}
 	}
@@ -79,10 +78,9 @@ component {
 	private void function discoverBeans( string folders ) {
 		var folderArray = listToArray( folders );
 		variables.pathMapCache = { };
-		var f = 0;
-		for ( f in folderArray ) {
-			f = directoryExists( f ) ? f : expandPath( f );
-			discoverBeansInFolder( f );
+		for ( var f in folderArray ) {
+			var folder = directoryExists( f ) ? f : expandPath( f );
+			discoverBeansInFolder( folder );
 		}
 		writeDump( variables.beanInfo );
 	}
@@ -93,11 +91,19 @@ component {
 		var n = arrayLen( cfcs );
 		for ( var i = 1; i <= n; ++i ) {
 			var cfcPath = cfcs[ i ];
+			var dirPath = getDirectoryFromPath( cfcPath );
+			var dir = singular( listLast( dirPath, '\/' ) );
 			var file = listLast( cfcPath, '\/' );
 			var beanName = left( file, len( file ) - 4 );
 			var dottedPath = deduceDottedPath( cfcPath );
-			var metadata = { path = cfcPath, cfc = dottedPath, metadata = cleanMetadata( dottedPath ) };
-			variables.beanInfo[ beanName ] = metadata;
+			var metadata = { name = beanName, qualifier = dir, path = cfcPath, cfc = dottedPath, metadata = cleanMetadata( dottedPath ) };
+			if ( structKeyExists( variables.beanInfo, beanName ) ) {
+				structDelete( variables.beanInfo, beanName );
+				variables.beanInfo[ beanName & dir ] = metadata;
+			} else {
+				variables.beanInfo[ beanName ] = metadata;
+				variables.beanInfo[ beanName & dir ] = metadata;
+			}
 		}
 	}
 	
@@ -110,6 +116,17 @@ component {
 	private void function setupFrameworkDefaults() {
 		param name = "variables.config.recurse"		default = true;
 		param name = "variables.config.version"		default = "0.0.1";
+	}
+	
+	
+	private string function singular( string plural ) {
+		var single = plural;
+		var n = len( plural );
+		var last = right( plural, 1 );
+		if ( last == 's' ) {
+			single = left( plural, n - 1 );
+		}
+		return single;
 	}
 	
 }

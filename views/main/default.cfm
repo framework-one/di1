@@ -1,2 +1,1 @@
-﻿Welcome to InjectOne!
-<cfset bf = new ioc( '/model/data,/model/services' ) />
+﻿<h2>Welcome to InjectOne!</h2>
