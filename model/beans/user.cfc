@@ -1,5 +1,5 @@
 component {
-	function setProduct( product ) {
+	function init( product ) {
 		this.product = product;
 	}
 }

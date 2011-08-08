@@ -84,8 +84,17 @@ component {
 					for ( var i = 1; i <= n; ++i ) {
 						var func = md.functions[ i ];
 						if ( func.name == 'init' ) {
-							// TODO: analyze arguments to reduce work later!
-							iocMeta.constructor = func;
+							iocMeta.constructor = { };
+							writeDump( func );
+							if ( structKeyExists( func, 'parameters' ) ) {
+								// due to a bug in ACF9.0.1, we cannot use var property in md.functions,
+								// instead we must use an explicit loop index... ugh!
+								var m = arrayLen( func.parameters );
+								for ( var j = 1; j <= m; ++j ) {
+									var arg = func.parameters[ j ];
+									iocMeta.constructor[ arg.name ] = arg.type;
+								}
+							}
 						}
 					}
 				}
@@ -165,8 +174,8 @@ component {
 		// returns a struct of the bean and a struct of beans and setters still to run
 		var partialBean = resolveBeanCreate( beanName, { injection = { } } );
 		// now perform all of the injection:
-		for ( var beanName in partialBean.injection ) {
-			var injection = partialBean.injection[ beanName ];
+		for ( var name in partialBean.injection ) {
+			var injection = partialBean.injection[ name ];
 			for ( var property in injection.setters ) {
 				var args = { };
 				args[ property ] = partialBean.injection[ property ].bean;
@@ -181,8 +190,13 @@ component {
 		var info = variables.beanInfo[ beanName ];
 		// use createObject so we have control over initialization:
 		var bean = createObject( 'component', info.cfc );
-		if ( structKeyExists( info, 'constructor' ) ) {
-			// TODO: run init() appropriately - add to accumulator.injection
+		if ( structKeyExists( info.metadata, 'constructor' ) ) {
+			var args = { };
+			for ( var arg in info.metadata.constructor ) {
+				var argBean = resolveBeanCreate( arg, accumulator );
+				args[ arg ] = argBean.bean;
+			}
+			evaluate( 'bean.init( argumentCollection = args )' );
 		}
 		var setterMeta = findSetters( bean, info.metadata );
 		setterMeta.bean = bean;
