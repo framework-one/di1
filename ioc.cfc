@@ -38,7 +38,7 @@ component {
 			return variables.beanCache[ beanName ];
 		} else {
 			var bean = resolveBean( beanName );
-			if ( variables.beanInfo.isSingleton ) {
+			if ( variables.beanInfo[ beanName ].isSingleton ) {
 				variables.beanCache[ beanName ] = bean;
 			}
 			return bean;
@@ -56,8 +56,42 @@ component {
 	// PRIVATE METHODS
 	
 	private struct function cleanMetadata( string cfc ) {
-		var md = getComponentMetadata( cfc );
-		return md;
+		var baseMetadata = getComponentMetadata( cfc );
+		var iocMeta = { setters = [ ] };
+		var md = { extends = baseMetadata };
+		do {
+			md = md.extends;
+			// gather up setters based on metadata:
+			var implicitSetters = structKeyExists( md, 'accessors' ) && isBoolean( md.accessors ) && md.accessors;
+			if ( structKeyExists( md, 'properties' ) ) {
+				// due to a bug in ACF9.0.1, we cannot use var property in md.properties,
+				// instead we must use an explicit loop index... ugh!
+				var n = arrayLen( md.properties );
+				for ( var i = 1; i <= n; ++i ) {
+					var property = md.properties[ i ];
+					if ( implicitSetters ||
+							structKeyExists( property, 'setter' ) && isBoolean( property.setter ) && property.setter ) {
+						arrayAppend( iocMeta.setters, property.name );
+					}
+				}
+			}
+			// still looking for a constructor?
+			if ( !structKeyExists( iocMeta, 'constructor' ) ) {
+				if ( structKeyExists( md, 'functions' ) ) {
+					// due to a bug in ACF9.0.1, we cannot use var property in md.functions,
+					// instead we must use an explicit loop index... ugh!
+					var n = arrayLen( md.functions );
+					for ( var i = 1; i <= n; ++i ) {
+						var func = md.functions[ i ];
+						if ( func.name == 'init' ) {
+							// TODO: analyze arguments to reduce work later!
+							iocMeta.constructor = func;
+						}
+					}
+				}
+			}
+		} while ( structKeyExists( md, 'extends' ) );
+		return iocMeta;
 	}
 	
 	
@@ -96,7 +130,10 @@ component {
 			var file = listLast( cfcPath, '\/' );
 			var beanName = left( file, len( file ) - 4 );
 			var dottedPath = deduceDottedPath( cfcPath );
-			var metadata = { name = beanName, qualifier = dir, path = cfcPath, cfc = dottedPath, metadata = cleanMetadata( dottedPath ) };
+			var metadata = { 
+				name = beanName, qualifier = dir, isSingleton = ( dir != 'bean' ), 
+				path = cfcPath, cfc = dottedPath, metadata = cleanMetadata( dottedPath )
+			};
 			if ( structKeyExists( variables.beanInfo, beanName ) ) {
 				structDelete( variables.beanInfo, beanName );
 				variables.beanInfo[ beanName & dir ] = metadata;
@@ -108,8 +145,53 @@ component {
 	}
 	
 	
+	private struct function findSetters( any cfc, struct iocMeta ) {
+		var liveMeta = { setters = iocMeta.setters };
+		// gather up explicit setters:
+		for ( var member in cfc ) {
+			var method = cfc[ member ];
+			var n = len( member );
+			if ( isCustomFunction( method ) && left( member, 3 ) == 'set' && n > 3 ) {
+				var property = right( member, n - 3 );
+				arrayAppend( liveMeta.setters, property );
+			}
+		}
+		return liveMeta;
+	}
+	
+	
 	private any function resolveBean( string beanName ) {
-		throw 'not implemented';
+		// do enough resolution to create and initialization this bean
+		// returns a struct of the bean and a struct of beans and setters still to run
+		var partialBean = resolveBeanCreate( beanName, { injection = { } } );
+		// now perform all of the injection:
+		for ( var beanName in partialBean.injection ) {
+			var injection = partialBean.injection[ beanName ];
+			for ( var property in injection.setters ) {
+				var args = { };
+				args[ property ] = partialBean.injection[ property ].bean;
+				evaluate( 'injection.bean.set#property#( argumentCollection = args )' );
+			}
+		}
+		return partialBean.bean;
+	}
+	
+	
+	private struct function resolveBeanCreate( string beanName, struct accumulator ) {
+		var info = variables.beanInfo[ beanName ];
+		// use createObject so we have control over initialization:
+		var bean = createObject( 'component', info.cfc );
+		if ( structKeyExists( info, 'constructor' ) ) {
+			// TODO: run init() appropriately - add to accumulator.injection
+		}
+		var setterMeta = findSetters( bean, info.metadata );
+		setterMeta.bean = bean;
+		accumulator.injection[ beanName ] = setterMeta; 
+		for ( var property in setterMeta.setters ) {
+			resolveBeanCreate( property, accumulator );
+		}
+		accumulator.bean = bean;
+		return accumulator;
 	}
 	
 	

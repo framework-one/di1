@@ -1,2 +1,3 @@
 ﻿component {
+	function doSomething() { }
 }
