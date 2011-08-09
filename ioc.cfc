@@ -103,7 +103,9 @@ component {
 	}
 	
 	
-	private string function deduceDottedPath( string path ) {
+	private string function deduceDottedPath( string path, string mapping, string truePath ) {
+		// TODO: we know mapping => truePath and path will have a prefix of truePath
+		// figure out dotted version of mapping and take it away from path / truePath
 		// given a full file path, figure out the root-relative or mapped path
 		// then convert that to a CFC dotted path
 		var webroot = expandPath( '/' );
@@ -121,14 +123,13 @@ component {
 		var folderArray = listToArray( folders );
 		variables.pathMapCache = { };
 		for ( var f in folderArray ) {
-			var folder = directoryExists( f ) ? f : expandPath( f );
-			discoverBeansInFolder( folder );
+			discoverBeansInFolder( f );
 		}
-		writeDump( variables.beanInfo );
 	}
 	
 	
-	private void function discoverBeansInFolder( string folder ) {
+	private void function discoverBeansInFolder( string original ) {
+		var folder = expandPath( original );
 		var cfcs = directoryList( folder, variables.config.recurse, 'path', '*.cfc' );
 		var n = arrayLen( cfcs );
 		for ( var i = 1; i <= n; ++i ) {
