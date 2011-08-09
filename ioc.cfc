@@ -57,7 +57,7 @@ component {
 	
 	private struct function cleanMetadata( string cfc ) {
 		var baseMetadata = getComponentMetadata( cfc );
-		var iocMeta = { setters = [ ] };
+		var iocMeta = { setters = { } };
 		var md = { extends = baseMetadata };
 		do {
 			md = md.extends;
@@ -71,7 +71,7 @@ component {
 					var property = md.properties[ i ];
 					if ( implicitSetters ||
 							structKeyExists( property, 'setter' ) && isBoolean( property.setter ) && property.setter ) {
-						arrayAppend( iocMeta.setters, property.name );
+						iocMeta.setters[ property.name ] = 'implicit';
 					}
 				}
 			}
@@ -85,7 +85,6 @@ component {
 						var func = md.functions[ i ];
 						if ( func.name == 'init' ) {
 							iocMeta.constructor = { };
-							writeDump( func );
 							if ( structKeyExists( func, 'parameters' ) ) {
 								// due to a bug in ACF9.0.1, we cannot use var property in md.functions,
 								// instead we must use an explicit loop index... ugh!
@@ -138,7 +137,7 @@ component {
 			var dir = singular( listLast( dirPath, '\/' ) );
 			var file = listLast( cfcPath, '\/' );
 			var beanName = left( file, len( file ) - 4 );
-			var dottedPath = deduceDottedPath( cfcPath );
+			var dottedPath = deduceDottedPath( cfcPath, folder, original );
 			var metadata = { 
 				name = beanName, qualifier = dir, isSingleton = ( dir != 'bean' ), 
 				path = cfcPath, cfc = dottedPath, metadata = cleanMetadata( dottedPath )
@@ -162,7 +161,7 @@ component {
 			var n = len( member );
 			if ( isCustomFunction( method ) && left( member, 3 ) == 'set' && n > 3 ) {
 				var property = right( member, n - 3 );
-				arrayAppend( liveMeta.setters, property );
+				liveMeta.setters[ property ] = 'explicit';
 			}
 		}
 		return liveMeta;
