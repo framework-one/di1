@@ -91,7 +91,7 @@ component {
 								var m = arrayLen( func.parameters );
 								for ( var j = 1; j <= m; ++j ) {
 									var arg = func.parameters[ j ];
-									iocMeta.constructor[ arg.name ] = arg.type;
+									iocMeta.constructor[ arg.name ] = structKeyExists( arg, 'type' ) ? arg.type : 'any';
 								}
 							}
 						}
