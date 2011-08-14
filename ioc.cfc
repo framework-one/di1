@@ -18,39 +18,54 @@ component {
 	// CONSTRUCTOR
 	
 	public any function init( string folders, struct config = { } ) {
+		variables.folders = folders;
+		variables.config = config;
 		variables.beanInfo = { };
 		variables.beanCache = { };
-		variables.config = config;
 		setupFrameworkDefaults();
-		discoverBeans( folders );
 		return this;
 	}
 	
 	// PUBLIC METHODS
 	
 	public boolean function containsBean( string beanName ) {
-		return structKeyExists( variables.beanInfo, beanName );
+		discoverBeans( variables.folders );
+		return structKeyExists( variables.beanInfo, beanName ) ||
+				( structKeyExists( variables, 'parent' ) && variables.parent.containsBean( beanName ) );
 	}
 	
 	
 	public any function getBean( string beanName ) {
-		if ( structKeyExists( variables.beanCache, beanName ) ) {
-			return variables.beanCache[ beanName ];
-		} else {
-			var bean = resolveBean( beanName );
-			if ( variables.beanInfo[ beanName ].isSingleton ) {
-				variables.beanCache[ beanName ] = bean;
+		discoverBeans( variables.folders );
+		if ( structKeyExists( variables.beanInfo, beanName ) ) {
+			if ( structKeyExists( variables.beanCache, beanName ) ) {
+				return variables.beanCache[ beanName ];
+			} else {
+				var bean = resolveBean( beanName );
+				if ( variables.beanInfo[ beanName ].isSingleton ) {
+					variables.beanCache[ beanName ] = bean;
+				}
+				return bean;
 			}
-			return bean;
+		} else if ( structKeyExists( variables, 'parent' ) ) {
+			return variables.parent.getBean( beanName );
+		} else {
+			throw 'bean not found: #beanName#';
 		}
 	}
 	
 	
 	public void function load() {
+		discoverBeans( variables.folders );
 		variables.beanCache = { };
 		for ( var key in variables.beanInfo ) {
 			getBean( key );
 		}
+	}
+	
+	
+	public void function setParent( any parent ) {
+		variables.parent = parent;
 	}
 	
 	// PRIVATE METHODS
@@ -120,10 +135,15 @@ component {
 	
 	
 	private void function discoverBeans( string folders ) {
-		var folderArray = listToArray( folders );
-		variables.pathMapCache = { };
-		for ( var f in folderArray ) {
-			discoverBeansInFolder( f );
+		if ( structKeyExists( variables, 'discoveryComplete' ) ) return;
+		lock name="#application.applicationName#_ioc1_#folders#" type="exclusive" timeout="30" {
+			if ( structKeyExists( variables, 'discoveryComplete' ) ) return;
+			var folderArray = listToArray( folders );
+			variables.pathMapCache = { };
+			for ( var f in folderArray ) {
+				discoverBeansInFolder( f );
+			}
+			variables.discoveryComplete = true;
 		}
 	}
 	
@@ -178,7 +198,13 @@ component {
 			var injection = partialBean.injection[ name ];
 			for ( var property in injection.setters ) {
 				var args = { };
-				args[ property ] = partialBean.injection[ property ].bean;
+				if ( structKeyExists( partialBean.injection, property ) ) {
+					args[ property ] = partialBean.injection[ property ].bean;
+				} else if ( structKeyExists( variables, 'parent' ) ) {
+					args[ property ] = variables.parent.getBean( property );
+				} else {
+					throw 'bean not found: #property#; while resolving #name#';
+				}
 				evaluate( 'injection.bean.set#property#( argumentCollection = args )' );
 			}
 		}
@@ -187,22 +213,30 @@ component {
 	
 	
 	private struct function resolveBeanCreate( string beanName, struct accumulator ) {
-		var info = variables.beanInfo[ beanName ];
-		// use createObject so we have control over initialization:
-		var bean = createObject( 'component', info.cfc );
-		if ( structKeyExists( info.metadata, 'constructor' ) ) {
-			var args = { };
-			for ( var arg in info.metadata.constructor ) {
-				var argBean = resolveBeanCreate( arg, accumulator );
-				args[ arg ] = argBean.bean;
+		var bean = 0;
+		if ( structKeyExists( variables.beanInfo, beanName ) ) {
+			var info = variables.beanInfo[ beanName ];
+			// use createObject so we have control over initialization:
+			bean = createObject( 'component', info.cfc );
+			if ( structKeyExists( info.metadata, 'constructor' ) ) {
+				var args = { };
+				for ( var arg in info.metadata.constructor ) {
+					var argBean = resolveBeanCreate( arg, accumulator );
+					args[ arg ] = argBean.bean;
+				}
+				evaluate( 'bean.init( argumentCollection = args )' );
 			}
-			evaluate( 'bean.init( argumentCollection = args )' );
-		}
-		var setterMeta = findSetters( bean, info.metadata );
-		setterMeta.bean = bean;
-		accumulator.injection[ beanName ] = setterMeta; 
-		for ( var property in setterMeta.setters ) {
-			resolveBeanCreate( property, accumulator );
+			var setterMeta = findSetters( bean, info.metadata );
+			setterMeta.bean = bean;
+			accumulator.injection[ beanName ] = setterMeta; 
+			for ( var property in setterMeta.setters ) {
+				resolveBeanCreate( property, accumulator );
+			}
+		} else if ( structKeyExists( variables, 'parent' ) ) {
+			bean = variables.parent.getBean( beanName );
+			accumulator.injection[ beanName ] = { bean = bean, setters = { } };
+		} else {
+			throw 'bean not found: #beanName#';
 		}
 		accumulator.bean = bean;
 		return accumulator;
@@ -211,7 +245,7 @@ component {
 	
 	private void function setupFrameworkDefaults() {
 		param name = "variables.config.recurse"		default = true;
-		param name = "variables.config.version"		default = "0.0.1";
+		param name = "variables.config.version"		default = "0.0.2";
 	}
 	
 	
