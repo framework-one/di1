@@ -6,7 +6,7 @@
 				singulars = { sheep = 'bean' }
 			}
 		);
-		var bf = new ioc( '/model' );
+		var bf = new ioc( '/model', { transients = [ 'fish' ] } );
 		bf.setParent( xbf );
 		setBeanFactory( bf );
 		

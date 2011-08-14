@@ -71,6 +71,11 @@ component {
 	
 	// PRIVATE METHODS
 	
+	private boolean function beanIsTransient( string singleDir, string dir, string beanName ) {
+		return singleDir == 'bean' || structKeyExists( variables.transients, dir );
+	}
+	
+	
 	private struct function cleanMetadata( string cfc ) {
 		var baseMetadata = getComponentMetadata( cfc );
 		var iocMeta = { setters = { } };
@@ -163,20 +168,21 @@ component {
 			}
 			if ( excludePath ) continue;
 			var dirPath = getDirectoryFromPath( cfcPath );
-			var dir = singular( listLast( dirPath, '\/' ) );
+			var dir = listLast( dirPath, '\/' );
+			var singleDir = singular( dir );
 			var file = listLast( cfcPath, '\/' );
 			var beanName = left( file, len( file ) - 4 );
 			var dottedPath = deduceDottedPath( cfcPath, folder, original );
 			var metadata = { 
-				name = beanName, qualifier = dir, isSingleton = ( dir != 'bean' ), 
+				name = beanName, qualifier = singleDir, isSingleton = !beanIsTransient( singleDir, dir, beanName ), 
 				path = cfcPath, cfc = dottedPath, metadata = cleanMetadata( dottedPath )
 			};
 			if ( structKeyExists( variables.beanInfo, beanName ) ) {
 				structDelete( variables.beanInfo, beanName );
-				variables.beanInfo[ beanName & dir ] = metadata;
+				variables.beanInfo[ beanName & singleDir ] = metadata;
 			} else {
 				variables.beanInfo[ beanName ] = metadata;
-				variables.beanInfo[ beanName & dir ] = metadata;
+				variables.beanInfo[ beanName & singleDir ] = metadata;
 			}
 		}
 	}
@@ -308,7 +314,14 @@ component {
 			}
 		}
 		
-		variables.config.version = '0.0.6';
+		variables.transients = { };
+		if ( structKeyExists( variables.config, 'transients' ) ) {
+			for ( var transientFolder in variables.config.transients ) {
+				variables.transients[ transientFolder ] = true;
+			}
+		}
+		
+		variables.config.version = '0.0.7';
 	}
 	
 	
