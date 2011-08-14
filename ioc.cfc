@@ -22,6 +22,7 @@ component {
 		variables.config = config;
 		variables.beanInfo = { };
 		variables.beanCache = { };
+		variables.autoExclude = [ '/WEB-INF', '/Application.cfc' ];
 		setupFrameworkDefaults();
 		return this;
 	}
@@ -101,7 +102,7 @@ component {
 						if ( func.name == 'init' ) {
 							iocMeta.constructor = { };
 							if ( structKeyExists( func, 'parameters' ) ) {
-								// due to a bug in ACF9.0.1, we cannot use var property in md.functions,
+								// due to a bug in ACF9.0.1, we cannot use var arg in func.parameters,
 								// instead we must use an explicit loop index... ugh!
 								var m = arrayLen( func.parameters );
 								for ( var j = 1; j <= m; ++j ) {
@@ -151,9 +152,16 @@ component {
 	private void function discoverBeansInFolder( string original ) {
 		var folder = expandPath( original );
 		var cfcs = directoryList( folder, variables.config.recurse, 'path', '*.cfc' );
-		var n = arrayLen( cfcs );
-		for ( var i = 1; i <= n; ++i ) {
-			var cfcPath = cfcs[ i ];
+		for ( var cfcPath in cfcs ) {
+			// watch out for excluded paths:
+			var excludePath = false;
+			for ( var pattern in variables.config.exclude ) {
+				if ( findNoCase( pattern, cfcPath ) ) {
+					excludePath = true;
+					continue;
+				}
+			}
+			if ( excludePath ) continue;
 			var dirPath = getDirectoryFromPath( cfcPath );
 			var dir = singular( listLast( dirPath, '\/' ) );
 			var file = listLast( cfcPath, '\/' );
@@ -245,7 +253,14 @@ component {
 	
 	private void function setupFrameworkDefaults() {
 		param name = "variables.config.recurse"		default = true;
-		param name = "variables.config.version"		default = "0.0.2";
+		param name = "variables.config.version"		default = "0.0.3";
+		
+		if ( !structKeyExists( variables.config, 'exclude' ) ) {
+			variables.config.exclude = [ ];
+		}
+		for ( var elem in variables.autoExclude ) {
+			arrayAppend( variables.config.exclude, elem );
+		}
 	}
 	
 	
