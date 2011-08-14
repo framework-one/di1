@@ -197,6 +197,29 @@ component {
 	}
 	
 	
+	private void function logMissingBean( string beanName, string resolvingBeanName = '' ) {
+		var sys = createObject( 'java', 'java.lang.System' );
+		if ( len( resolvingBeanName ) ) {
+			sys.out.println( 'bean not found: #beanName#; while resolving #resolvingBeanName#' );
+		} else {
+			sys.out.println( 'bean not found: #beanName#' );
+		}
+	}
+	
+	
+	private void function missingBean( string beanName, string resolvingBeanName = '' ) {
+		if ( variables.config.strict ) {
+			if ( len( resolvingBeanName ) ) {
+				throw 'bean not found: #beanName#; while resolving #resolvingBeanName#';
+			} else {
+				throw 'bean not found: #beanName#';
+			}
+		} else {
+			logMissingBean( beanName, resolvingBeanName );
+		}
+	}
+	
+	
 	private any function resolveBean( string beanName ) {
 		// do enough resolution to create and initialization this bean
 		// returns a struct of the bean and a struct of beans and setters still to run
@@ -208,10 +231,11 @@ component {
 				var args = { };
 				if ( structKeyExists( partialBean.injection, property ) ) {
 					args[ property ] = partialBean.injection[ property ].bean;
-				} else if ( structKeyExists( variables, 'parent' ) ) {
+				} else if ( structKeyExists( variables, 'parent' ) && variables.parent.containsBean( property ) ) {
 					args[ property ] = variables.parent.getBean( property );
 				} else {
-					throw 'bean not found: #property#; while resolving #name#';
+					missingBean( property, beanName );
+					continue;
 				}
 				evaluate( 'injection.bean.set#property#( argumentCollection = args )' );
 			}
@@ -240,20 +264,21 @@ component {
 			for ( var property in setterMeta.setters ) {
 				resolveBeanCreate( property, accumulator );
 			}
-		} else if ( structKeyExists( variables, 'parent' ) ) {
+			accumulator.bean = bean;
+		} else if ( structKeyExists( variables, 'parent' ) && variables.parent.containsBean( beanName ) ) {
 			bean = variables.parent.getBean( beanName );
 			accumulator.injection[ beanName ] = { bean = bean, setters = { } };
+			accumulator.bean = bean;
 		} else {
-			throw 'bean not found: #beanName#';
+			missingBean( beanName );
 		}
-		accumulator.bean = bean;
 		return accumulator;
 	}
 	
 	
 	private void function setupFrameworkDefaults() {
 		param name = "variables.config.recurse"		default = true;
-		param name = "variables.config.version"		default = "0.0.3";
+		param name = "variables.config.strict"		default = false;
 		
 		if ( !structKeyExists( variables.config, 'exclude' ) ) {
 			variables.config.exclude = [ ];
@@ -261,6 +286,8 @@ component {
 		for ( var elem in variables.autoExclude ) {
 			arrayAppend( variables.config.exclude, elem );
 		}
+		
+		variables.config.version = "0.0.4";
 	}
 	
 	

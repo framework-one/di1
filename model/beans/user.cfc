@@ -3,4 +3,5 @@ component accessors="true" {
 	function init( product ) {
 		this.product = product;
 	}
+	function setFunny() { }
 }
