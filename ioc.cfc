@@ -124,18 +124,16 @@ component {
 	}
 	
 	
-	private string function deduceDottedPath( string path, string mapping, string truePath ) {
-		// TODO: we know mapping => truePath and path will have a prefix of truePath
-		// figure out dotted version of mapping and take it away from path / truePath
-		// given a full file path, figure out the root-relative or mapped path
-		// then convert that to a CFC dotted path
-		var webroot = expandPath( '/' );
-		if ( path.startsWith( webroot ) ) {
-			var rootRelativePath = right( path, len( path ) - len( webroot ) );
-			return replace( left( rootRelativePath, len( rootRelativePath ) - 4 ), '/', '.', 'all' );
+	private string function deduceDottedPath( string path, string truePath, string mapping ) {
+		var remaining = right( path, len( path ) - len( truePath ) );
+		// strip leading / if present and strip trailing .cfc:
+		if ( left( remaining, 1 ) == '/' ) remaining = right( remaining, len( remaining ) - 1 );
+		remaining = left( remaining, len( remaining ) - 4 );
+		remaining = replace( remaining, '/', '.', 'all' );
+		if ( len( mapping ) ) {
+			return mapping & '.' & remaining;
 		} else {
-			// need to go off looking for mappings
-			throw 'not implemented';
+			return remaining;
 		}
 	}
 	
@@ -147,15 +145,21 @@ component {
 			var folderArray = listToArray( folders );
 			variables.pathMapCache = { };
 			for ( var f in folderArray ) {
-				discoverBeansInFolder( f );
+				discoverBeansInFolder( trim( f ) );
 			}
 			variables.discoveryComplete = true;
 		}
 	}
 	
 	
-	private void function discoverBeansInFolder( string original ) {
-		var folder = replace( expandPath( original ), '\', '/', 'all' );
+	private void function discoverBeansInFolder( string mapping ) {
+		var folder = replace( expandPath( mapping ), '\', '/', 'all' );
+		// strip any leading / trailing cruft from the mapping:
+		while ( len( mapping ) && left( mapping, 1 ) == '.' ) mapping = right( mapping, len( mapping ) - 1 );
+		while ( len( mapping ) && left( mapping, 1 ) == '/' ) mapping = right( mapping, len( mapping ) - 1 );
+		if ( right( mapping, 1 ) == '/' ) mapping = left( mapping, len( mapping ) - 1 );
+		mapping = replace( mapping, '/', '.', 'all' );
+		// find all the CFCs here:
 		var cfcs = directoryList( folder, variables.config.recurse, 'path', '*.cfc' );
 		for ( var cfcOSPath in cfcs ) {
 			var cfcPath = replace( cfcOSPath, '\', '/', 'all' );
@@ -173,7 +177,7 @@ component {
 			var singleDir = singular( dir );
 			var file = listLast( cfcPath, '/' );
 			var beanName = left( file, len( file ) - 4 );
-			var dottedPath = deduceDottedPath( cfcPath, folder, original );
+			var dottedPath = deduceDottedPath( cfcPath, folder, mapping );
 			var metadata = { 
 				name = beanName, qualifier = singleDir, isSingleton = !beanIsTransient( singleDir, dir, beanName ), 
 				path = cfcPath, cfc = dottedPath, metadata = cleanMetadata( dottedPath )

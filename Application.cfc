@@ -1,7 +1,8 @@
 ﻿// caution: requires FW/1 2.0 Alpha 5 or later!!
 component extends="org.corfield.framework" {
+	this.mappings[ '/goldfish/trumpets' ] = expandPath( '/extrabeans' );
 	function setupApplication() {
-		var xbf = new ioc( '/extrabeans',
+		var xbf = new ioc( '/goldfish/trumpets',
 			{
 				constants = { magicValue = 42 },
 				singulars = { sheep = 'bean' }
