@@ -283,6 +283,7 @@ component {
 				accumulator.bean = bean;
 			} else if ( structKeyExists( info, 'value' ) ) {
 				accumulator.bean = info.value;
+				accumulator.injection[ beanName ] = { bean = info.value, setters = { } }; 
 			} else {
 				throw 'internal error: invalid metadata for #beanName#';
 			}
@@ -308,6 +309,8 @@ component {
 			arrayAppend( variables.config.exclude, elem );
 		}
 		
+		// install bean factory constant:
+		variables.beanInfo.beanFactory = { value = this, isSingleton = true };
 		if ( structKeyExists( variables.config, 'constants' ) ) {
 			for ( var beanName in variables.config.constants ) {
 				variables.beanInfo[ beanName ] = { value = variables.config.constants[ beanName ], isSingleton = true };
@@ -321,7 +324,7 @@ component {
 			}
 		}
 		
-		variables.config.version = '0.0.7';
+		variables.config.version = '0.0.8';
 	}
 	
 	

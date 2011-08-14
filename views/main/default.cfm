@@ -1,6 +1,8 @@
 ﻿<h2>Welcome to InjectOne!</h2>
 <cfset bf = getBeanFactory() />
-<cfdump var="#bf.getBean('item')#" label="Item Bean"/>
+<cfset item = bf.getBean('item') />
+<cfdump var="#item#" label="Item Bean"/>
+<cfdump var="#item.getNewItem()#" label="New Item From Bean-Aware Item Bean"/>
 <cfset user1 = bf.getBean('userfish') />
 <cfdump var="#user1#" label="User 1 Bean"/>
 <cfdump var="#user1.getItem()#" label="User 1's Item Bean"/>
