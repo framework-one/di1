@@ -155,9 +155,10 @@ component {
 	
 	
 	private void function discoverBeansInFolder( string original ) {
-		var folder = expandPath( original );
+		var folder = replace( expandPath( original ), '\', '/', 'all' );
 		var cfcs = directoryList( folder, variables.config.recurse, 'path', '*.cfc' );
-		for ( var cfcPath in cfcs ) {
+		for ( var cfcOSPath in cfcs ) {
+			var cfcPath = replace( cfcOSPath, '\', '/', 'all' );
 			// watch out for excluded paths:
 			var excludePath = false;
 			for ( var pattern in variables.config.exclude ) {
@@ -168,9 +169,9 @@ component {
 			}
 			if ( excludePath ) continue;
 			var dirPath = getDirectoryFromPath( cfcPath );
-			var dir = listLast( dirPath, '\/' );
+			var dir = listLast( dirPath, '/' );
 			var singleDir = singular( dir );
-			var file = listLast( cfcPath, '\/' );
+			var file = listLast( cfcPath, '/' );
 			var beanName = left( file, len( file ) - 4 );
 			var dottedPath = deduceDottedPath( cfcPath, folder, original );
 			var metadata = { 
@@ -306,7 +307,7 @@ component {
 			variables.config.exclude = [ ];
 		}
 		for ( var elem in variables.autoExclude ) {
-			arrayAppend( variables.config.exclude, elem );
+			arrayAppend( variables.config.exclude, replace( elem, '\', '/', 'all' ) );
 		}
 		
 		// install bean factory constant:
@@ -324,7 +325,7 @@ component {
 			}
 		}
 		
-		variables.config.version = '0.0.8';
+		variables.config.version = '0.0.9';
 	}
 	
 	
