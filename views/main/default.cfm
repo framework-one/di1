@@ -10,3 +10,4 @@
 <cfdump var="#bf.getBean('userservice')#" label="User Service"/>
 <cfdump var="#bf.getBean('product')#" label="Product Service"/>
 <cfdump var="#bf.getBean('userbean').product.getUserService()#" label="bf.getBean('userbean').product.getUserService()"/>
+<cfdump var="#bf.getBean('magicvalue')#" label="bf.getBean('magicvalue')"/>

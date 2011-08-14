@@ -304,7 +304,7 @@ component {
 		
 		if ( structKeyExists( variables.config, 'constants' ) ) {
 			for ( var beanName in variables.config.constants ) {
-				variables.beanInfo[ beanName ] = { value = variables.config.constants[ beanName ] };
+				variables.beanInfo[ beanName ] = { value = variables.config.constants[ beanName ], isSingleton = true };
 			}
 		}
 		
