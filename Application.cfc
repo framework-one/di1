@@ -1,4 +1,5 @@
-﻿component extends="org.corfield.framework" {
+﻿// caution: requires FW/1 2.0 Alpha 5 or later!!
+component extends="org.corfield.framework" {
 	function setupApplication() {
 		var xbf = new ioc( '/extrabeans',
 			{
