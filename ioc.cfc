@@ -308,11 +308,15 @@ component {
 			}
 		}
 		
-		variables.config.version = '0.0.5';
+		variables.config.version = '0.0.6';
 	}
 	
 	
 	private string function singular( string plural ) {
+		if ( structKeyExists( variables.config, 'singulars' ) && 
+				structKeyExists( variables.config.singulars, plural ) ) {
+			return variables.config.singulars[ plural ];
+		}
 		var single = plural;
 		var n = len( plural );
 		var last = right( plural, 1 );
