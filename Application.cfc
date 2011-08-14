@@ -8,7 +8,9 @@ component extends="org.corfield.framework" {
 				singulars = { sheep = 'bean' }
 			}
 		);
-		var bf = new ioc( '/model', { transients = [ 'fish' ] } );
+		// demonstrate passing expanded path under webroot:
+		var svcPath = expandPath( 'services' );
+		var bf = new ioc( '/model, #svcPath#', { transients = [ 'fish' ] } );
 		bf.setParent( xbf );
 		setBeanFactory( bf );
 		

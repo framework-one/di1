@@ -124,16 +124,26 @@ component {
 	}
 	
 	
-	private string function deduceDottedPath( string path, string truePath, string mapping ) {
-		var remaining = right( path, len( path ) - len( truePath ) );
-		// strip leading / if present and strip trailing .cfc:
-		if ( left( remaining, 1 ) == '/' ) remaining = right( remaining, len( remaining ) - 1 );
-		remaining = left( remaining, len( remaining ) - 4 );
-		remaining = replace( remaining, '/', '.', 'all' );
-		if ( len( mapping ) ) {
-			return mapping & '.' & remaining;
+	private string function deduceDottedPath( string path, string truePath, string mapping, boolean rootRelative ) {
+		if ( rootRelative ) {
+			var remaining = right( path, len( path ) - len( truePath ) );
+			// strip leading / if present and strip trailing .cfc:
+			if ( left( remaining, 1 ) == '/' ) remaining = right( remaining, len( remaining ) - 1 );
+			remaining = left( remaining, len( remaining ) - 4 );
+			remaining = replace( remaining, '/', '.', 'all' );
+			if ( len( mapping ) ) {
+				return mapping & '.' & remaining;
+			} else {
+				return remaining;
+			}
 		} else {
-			return remaining;
+			var webroot = replace( expandPath( '/' ), '\', '/', 'all' );
+			if ( path.startsWith( webroot ) ) {
+				var rootRelativePath = right( path, len( path ) - len( webroot ) );
+				return replace( left( rootRelativePath, len( rootRelativePath ) - 4 ), '/', '.', 'all' );
+			} else {
+				throw 'unable to deduce dot-relative paths outside webroot: #path#';
+			}
 		}
 	}
 	
@@ -145,7 +155,7 @@ component {
 			var folderArray = listToArray( folders );
 			variables.pathMapCache = { };
 			for ( var f in folderArray ) {
-				discoverBeansInFolder( trim( f ) );
+				discoverBeansInFolder( replace( trim( f ), '\', '/', 'all' ) );
 			}
 			variables.discoveryComplete = true;
 		}
@@ -154,10 +164,20 @@ component {
 	
 	private void function discoverBeansInFolder( string mapping ) {
 		var folder = replace( expandPath( mapping ), '\', '/', 'all' );
-		// strip any leading / trailing cruft from the mapping:
-		while ( len( mapping ) && left( mapping, 1 ) == '.' ) mapping = right( mapping, len( mapping ) - 1 );
-		while ( len( mapping ) && left( mapping, 1 ) == '/' ) mapping = right( mapping, len( mapping ) - 1 );
-		if ( right( mapping, 1 ) == '/' ) mapping = left( mapping, len( mapping ) - 1 );
+		var webroot = replace( expandPath( '/' ), '\', '/', 'all' );
+		if ( mapping.startsWith( webroot ) ) {
+			// must be an already expanded path!
+			folder = mapping;
+		}
+		// treat absolute file paths as not (web)root-relative:
+		var rootRelative = left( mapping, 1 ) == '/' && folder != mapping;
+		while ( left( mapping, 1 ) == '.' || left( mapping, 1 ) == '/' ) {
+			if ( len( mapping ) > 1 ) {
+				mapping = right( mapping, len( mapping ) - 1 );
+			} else {
+				mapping = '';
+			}
+		}
 		mapping = replace( mapping, '/', '.', 'all' );
 		// find all the CFCs here:
 		var cfcs = directoryList( folder, variables.config.recurse, 'path', '*.cfc' );
@@ -177,7 +197,7 @@ component {
 			var singleDir = singular( dir );
 			var file = listLast( cfcPath, '/' );
 			var beanName = left( file, len( file ) - 4 );
-			var dottedPath = deduceDottedPath( cfcPath, folder, mapping );
+			var dottedPath = deduceDottedPath( cfcPath, folder, mapping, rootRelative );
 			var metadata = { 
 				name = beanName, qualifier = singleDir, isSingleton = !beanIsTransient( singleDir, dir, beanName ), 
 				path = cfcPath, cfc = dottedPath, metadata = cleanMetadata( dottedPath )
@@ -329,7 +349,7 @@ component {
 			}
 		}
 		
-		variables.config.version = '0.0.9';
+		variables.config.version = '0.1.0';
 	}
 	
 	
