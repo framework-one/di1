@@ -248,23 +248,38 @@ component {
 		var bean = 0;
 		if ( structKeyExists( variables.beanInfo, beanName ) ) {
 			var info = variables.beanInfo[ beanName ];
-			// use createObject so we have control over initialization:
-			bean = createObject( 'component', info.cfc );
-			if ( structKeyExists( info.metadata, 'constructor' ) ) {
-				var args = { };
-				for ( var arg in info.metadata.constructor ) {
-					var argBean = resolveBeanCreate( arg, accumulator );
-					args[ arg ] = argBean.bean;
+			if ( structKeyExists( info, 'cfc' ) ) {
+				// use createObject so we have control over initialization:
+				bean = createObject( 'component', info.cfc );
+				if ( structKeyExists( info.metadata, 'constructor' ) ) {
+					var args = { };
+					for ( var arg in info.metadata.constructor ) {
+						var argBean = resolveBeanCreate( arg, accumulator );
+						// this throws a non-intuitive exception unless we step in...
+						if ( !structKeyExists( argBean, 'bean' ) ) {
+							throw 'bean not found: #arg#; while resolving constructor arguments for #beanName#';
+						}
+						args[ arg ] = argBean.bean;
+					}
+					var __ioc_newBean = evaluate( 'bean.init( argumentCollection = args )' );
+					// if the constructor returns anything, it becomes the bean
+					// this allows for smart constructors that return things other
+					// than the CFC being created, such as implicit factory beans
+					// and automatic singletons etc (rare practices in CFML but...)
+					if ( isDefined( '__ioc_newBean' ) ) bean = __ioc_newBean;
 				}
-				evaluate( 'bean.init( argumentCollection = args )' );
+				var setterMeta = findSetters( bean, info.metadata );
+				setterMeta.bean = bean;
+				accumulator.injection[ beanName ] = setterMeta; 
+				for ( var property in setterMeta.setters ) {
+					resolveBeanCreate( property, accumulator );
+				}
+				accumulator.bean = bean;
+			} else if ( structKeyExists( info, 'value' ) ) {
+				accumulator.bean = info.value;
+			} else {
+				throw 'internal error: invalid metadata for #beanName#';
 			}
-			var setterMeta = findSetters( bean, info.metadata );
-			setterMeta.bean = bean;
-			accumulator.injection[ beanName ] = setterMeta; 
-			for ( var property in setterMeta.setters ) {
-				resolveBeanCreate( property, accumulator );
-			}
-			accumulator.bean = bean;
 		} else if ( structKeyExists( variables, 'parent' ) && variables.parent.containsBean( beanName ) ) {
 			bean = variables.parent.getBean( beanName );
 			accumulator.injection[ beanName ] = { bean = bean, setters = { } };
@@ -287,7 +302,13 @@ component {
 			arrayAppend( variables.config.exclude, elem );
 		}
 		
-		variables.config.version = "0.0.4";
+		if ( structKeyExists( variables.config, 'constants' ) ) {
+			for ( var beanName in variables.config.constants ) {
+				variables.beanInfo[ beanName ] = { value = variables.config.constants[ beanName ] };
+			}
+		}
+		
+		variables.config.version = '0.0.5';
 	}
 	
 	
