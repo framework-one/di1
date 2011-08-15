@@ -29,6 +29,13 @@ component {
 	
 	// PUBLIC METHODS
 	
+	// programmatically register new beans with the factory
+	public void function addBean( string beanName, any beanValue ) {
+		variables.beanInfo[ beanName ] = { value = beanValue, isSingleton = true };
+	}
+	
+	
+	// return true if the factory (or a parent factory) knows about the requested bean
 	public boolean function containsBean( string beanName ) {
 		discoverBeans( variables.folders );
 		return structKeyExists( variables.beanInfo, beanName ) ||
@@ -36,6 +43,7 @@ component {
 	}
 	
 	
+	// return the requested bean, fully populated
 	public any function getBean( string beanName ) {
 		discoverBeans( variables.folders );
 		if ( structKeyExists( variables.beanInfo, beanName ) ) {
@@ -56,15 +64,29 @@ component {
 	}
 	
 	
+	// given a bean (by name or by value), call the named setters with the specified property values
+	public any function injectProperties( any bean, struct properties ) {
+		if ( !isSimpleValue( bean ) ) bean = getBean( bean );
+		for ( var property in properties ) {
+			var args = { };
+			args[ property ] = properties[ property ];
+			evaluate( 'bean.set#property#( argumentCollection = args )' );
+		}
+		return bean;
+	}
+	
+	
+	// empty the cache and reload all the singleton beans
 	public void function load() {
 		discoverBeans( variables.folders );
 		variables.beanCache = { };
 		for ( var key in variables.beanInfo ) {
-			getBean( key );
+			if ( variables.beanInfo[ key ].isSingleton ) getBean( key );
 		}
 	}
 	
 	
+	// set the parent bean factory
 	public void function setParent( any parent ) {
 		variables.parent = parent;
 	}
@@ -349,7 +371,7 @@ component {
 			}
 		}
 		
-		variables.config.version = '0.1.0';
+		variables.config.version = '0.1.1';
 	}
 	
 	
