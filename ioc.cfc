@@ -105,7 +105,13 @@ component {
 		do {
 			md = md.extends;
 			// gather up setters based on metadata:
-			var implicitSetters = structKeyExists( md, 'accessors' ) && isBoolean( md.accessors ) && md.accessors;
+			var implicitSetters = false;
+			// we have implicit setters if: accessors="true" or persistent="true" (and we don't have accessors="false")
+			if ( structKeyExists( md, 'accessors' ) && isBoolean( md.accessors ) ) {
+				implicitSetters = md.accessors;
+			} else if ( structKeyExists( md, 'persistent' ) && isBoolean( md.persistent ) ) {
+				implicitSetters = md.persistent;
+			}
 			if ( structKeyExists( md, 'properties' ) ) {
 				// due to a bug in ACF9.0.1, we cannot use var property in md.properties,
 				// instead we must use an explicit loop index... ugh!
@@ -371,7 +377,7 @@ component {
 			}
 		}
 		
-		variables.config.version = '0.1.1';
+		variables.config.version = '0.1.2';
 	}
 	
 	
