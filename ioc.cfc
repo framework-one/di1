@@ -290,6 +290,10 @@ component {
 			for ( var property in injection.setters ) {
 				var args = { };
 				if ( structKeyExists( partialBean.injection, property ) ) {
+					// do not inject transients
+					if ( structKeyExists( variables.beanInfo, property ) && !( variables.beanInfo[ property ].isSingleton ) ) {
+						continue;
+					}
 					args[ property ] = partialBean.injection[ property ].bean;
 				} else if ( structKeyExists( variables, 'parent' ) && variables.parent.containsBean( property ) ) {
 					args[ property ] = variables.parent.getBean( property );
