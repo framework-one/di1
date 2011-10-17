@@ -64,14 +64,19 @@ component {
 	public any function getBean( string beanName ) {
 		discoverBeans( variables.folders );
 		if ( structKeyExists( variables.beanInfo, beanName ) ) {
-			if ( structKeyExists( variables.beanCache, beanName ) ) {
-				return variables.beanCache[ beanName ];
-			} else {
-				var bean = resolveBean( beanName );
-				if ( variables.beanInfo[ beanName ].isSingleton ) {
-					variables.beanCache[ beanName ] = bean;
+			var info = variables.beanInfo[ beanName ];
+			if ( info.isSingleton ) {
+				// cache on the qualified bean name:
+				var qualifiedName = beanName;
+				if ( structKeyExists( info, 'name' ) && structKeyExists( info, 'qualifier' ) ) {
+					qualifiedName = info.name & info.qualifier;
 				}
-				return bean;
+				if ( !structKeyExists( variables.beanCache, qualifiedName ) ) {
+					variables.beanCache[ qualifiedName ] = resolveBean( beanName );
+				}
+				return variables.beanCache[ qualifiedName ];
+			} else {
+				return resolveBean( beanName );
 			}
 		} else if ( structKeyExists( variables, 'parent' ) ) {
 			return variables.parent.getBean( beanName );
@@ -445,7 +450,7 @@ component {
 			}
 		}
 		
-		variables.config.version = '0.1.5';
+		variables.config.version = '0.1.6';
 	}
 	
 	
