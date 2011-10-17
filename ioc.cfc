@@ -63,6 +63,35 @@ component {
 		}
 	}
 	
+	// convenience API for metaprogramming perhaps?
+	public any function getBeanInfo( string beanName = '' ) {
+		if ( len( beanName ) ) {
+			if ( structKeyExists( variables.beanInfo, beanName ) ) {
+				return variables.beanInfo[ beanName ];
+			} else if ( structKeyExists( variables, 'parent' ) ) {
+				return variables.parent.getBeanInfo( beanName );
+			} else {
+				throw 'bean not found: #beanName#';
+			}
+		} else if ( structKeyExists( variables, 'parent' ) ) {
+			return { beanInfo = variables.beanInfo, parent = variables.parent.getBeanInfo() };
+		} else {
+			return { beanInfo = variables.beanInfo };
+		}
+	}
+	
+	
+	// return true iff bean is known to be a singleton
+	public boolean function isSingleton( string beanName ) {
+		if ( structKeyExists( variables.beanInfo, beanName ) ) {
+			return variables.beanInfo[ beanName ].isSingleton;
+		} else if ( structKeyExists( variables, 'parent' ) ) {
+			return variables.parent.isSingleton( beanName );
+		} else {
+			return false; // we don't know the bean therefore it is not a managed singleton
+		}
+	}
+	
 	
 	// given a bean (by name or by value), call the named setters with the specified property values
 	public any function injectProperties( any bean, struct properties ) {
@@ -77,6 +106,10 @@ component {
 	
 	
 	// empty the cache and reload all the singleton beans
+	// note: this does not reload the parent - if you have parent/child factories you
+	// are responsible for dealing with that logic (it's safe to reload a child but
+	// if you reload the parent, you must reload *all* child factories to ensure
+	// things stay consistent!)
 	public void function load() {
 		discoverBeans( variables.folders );
 		variables.beanCache = { };
@@ -100,7 +133,7 @@ component {
 	
 	private struct function cleanMetadata( string cfc ) {
 		var baseMetadata = getComponentMetadata( cfc );
-		var iocMeta = { setters = { } };
+		var iocMeta = { setters = { }, pruned = false };
 		var md = { extends = baseMetadata };
 		do {
 			md = md.extends;
@@ -121,6 +154,10 @@ component {
 					var property = md.properties[ i ];
 					if ( implicitSetters ||
 							structKeyExists( property, 'setter' ) && isBoolean( property.setter ) && property.setter ) {
+						if ( !isSingleton( property.name ) ) {
+							// ignore properties that we know to be transients...
+							continue;
+						}
 						iocMeta.setters[ property.name ] = 'implicit';
 					}
 				}
@@ -244,12 +281,25 @@ component {
 	
 	private struct function findSetters( any cfc, struct iocMeta ) {
 		var liveMeta = { setters = iocMeta.setters };
+		if ( !iocMeta.pruned ) {
+			// need to prune known setters of transients:
+			for ( var known in iocMeta.setters ) {
+				if ( !isSingleton( known ) ) {
+					structDelete( iocMeta.setters, known );
+				}
+			}
+			iocMeta.pruned = true;
+		}
 		// gather up explicit setters:
 		for ( var member in cfc ) {
 			var method = cfc[ member ];
 			var n = len( member );
 			if ( isCustomFunction( method ) && left( member, 3 ) == 'set' && n > 3 ) {
 				var property = right( member, n - 3 );
+				if ( !isSingleton( property ) ) {
+					// ignore properties that we know to be transients...
+					continue;
+				}
 				liveMeta.setters[ property ] = 'explicit';
 			}
 		}
@@ -378,7 +428,7 @@ component {
 			}
 		}
 		
-		variables.config.version = '0.1.3';
+		variables.config.version = '0.1.4';
 	}
 	
 	
