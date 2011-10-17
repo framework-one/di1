@@ -14,6 +14,9 @@ component extends="org.corfield.framework" {
 		bf.setParent( xbf );
 		setBeanFactory( bf );
 		
+		// programmatically declare another bean:
+		bf.declareBean( 'declaredBean', 'declared.things.example', false );
+		
 		// used to track creation of transient beans for illustration purposes:
 		structDelete( application, 'itemCount' );
 	}
