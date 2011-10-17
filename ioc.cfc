@@ -29,7 +29,7 @@ component {
 	
 	// PUBLIC METHODS
 	
-	// programmatically register new beans with the factory
+	// programmatically register new beans with the factory (add a singleton name/value pair)
 	public void function addBean( string beanName, any beanValue ) {
 		variables.beanInfo[ beanName ] = { value = beanValue, isSingleton = true };
 	}
@@ -40,6 +40,23 @@ component {
 		discoverBeans( variables.folders );
 		return structKeyExists( variables.beanInfo, beanName ) ||
 				( structKeyExists( variables, 'parent' ) && variables.parent.containsBean( beanName ) );
+	}
+	
+	
+	// programmatically register new beans with the factory (add an actual CFC)
+	public void function declareBean( string beanName, string dottedPath, boolean isSingleton = true ) {
+		var singleDir = '';
+		if ( listLen( dottedPath, '.' ) > 1 ) {
+			var cfc = listLast( dottedPath, '.' );
+			var dottedPart = left( dottedPath, len( dottedPath ) - len( cfc ) - 1 );
+			singleDir = singular( listLast( dottedPart, '.' ) );
+		}
+		var cfcPath = replace( expandPath( '/' & replace( dottedPath, '.', '/', 'all' ) & '.cfc' ), '\', '/', 'all' );
+		var metadata = { 
+			name = beanName, qualifier = singleDir, isSingleton = isSingleton, 
+			path = cfcPath, cfc = dottedPath, metadata = cleanMetadata( dottedPath )
+		};
+		variables.beanInfo[ beanName ] = metadata;
 	}
 	
 	
@@ -428,7 +445,7 @@ component {
 			}
 		}
 		
-		variables.config.version = '0.1.4';
+		variables.config.version = '0.1.5';
 	}
 	
 	
