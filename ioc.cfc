@@ -176,10 +176,6 @@ component {
 					var property = md.properties[ i ];
 					if ( implicitSetters ||
 							structKeyExists( property, 'setter' ) && isBoolean( property.setter ) && property.setter ) {
-						if ( !isSingleton( property.name ) ) {
-							// ignore properties that we know to be transients...
-							continue;
-						}
 						iocMeta.setters[ property.name ] = 'implicit';
 					}
 				}
@@ -450,7 +446,7 @@ component {
 			}
 		}
 		
-		variables.config.version = '0.1.6';
+		variables.config.version = '0.1.7';
 	}
 	
 	
