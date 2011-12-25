@@ -1,5 +1,5 @@
 ﻿/*
-	Copyright (c) 2010-2011, Sean Corfield
+	Copyright (c) 2010-2012, Sean Corfield
 
 	Licensed under the Apache License, Version 2.0 (the "License");
 	you may not use this file except in compliance with the License.
@@ -28,10 +28,20 @@ component {
 	}
 	
 	// PUBLIC METHODS
+
+    // programmatically register an alias
+    public any function addAlias( string aliasName, string beanName ) {
+		discoverBeans( variables.folders );
+        variables.beanInfo[ aliasName ] = variable.beanInfo[ beanName ];
+        return this;
+    }
+
 	
 	// programmatically register new beans with the factory (add a singleton name/value pair)
-	public void function addBean( string beanName, any beanValue ) {
+	public any function addBean( string beanName, any beanValue ) {
+		discoverBeans( variables.folders );
 		variables.beanInfo[ beanName ] = { value = beanValue, isSingleton = true };
+        return this;
 	}
 	
 	
@@ -44,19 +54,21 @@ component {
 	
 	
 	// programmatically register new beans with the factory (add an actual CFC)
-	public void function declareBean( string beanName, string dottedPath, boolean isSingleton = true ) {
+	public any function declareBean( string beanName, string dottedPath, boolean isSingleton = true ) {
+		discoverBeans( variables.folders );
 		var singleDir = '';
 		if ( listLen( dottedPath, '.' ) > 1 ) {
 			var cfc = listLast( dottedPath, '.' );
 			var dottedPart = left( dottedPath, len( dottedPath ) - len( cfc ) - 1 );
 			singleDir = singular( listLast( dottedPart, '.' ) );
 		}
-		var cfcPath = replace( expandPath( '/' & replace( dottedPath, '.', '/', 'all' ) & '.cfc' ), '\', '/', 'all' );
+		var cfcPath = replace( expandPath( '/' & replace( dottedPath, '.', '/', 'all' ) & '.cfc' ), chr(92), '/', 'all' );
 		var metadata = { 
 			name = beanName, qualifier = singleDir, isSingleton = isSingleton, 
 			path = cfcPath, cfc = dottedPath, metadata = cleanMetadata( dottedPath )
 		};
 		variables.beanInfo[ beanName ] = metadata;
+        return this;
 	}
 	
 	
@@ -87,6 +99,7 @@ component {
 	
 	// convenience API for metaprogramming perhaps?
 	public any function getBeanInfo( string beanName = '' ) {
+		discoverBeans( variables.folders );
 		if ( len( beanName ) ) {
 			if ( structKeyExists( variables.beanInfo, beanName ) ) {
 				return variables.beanInfo[ beanName ];
@@ -105,6 +118,7 @@ component {
 	
 	// return true iff bean is known to be a singleton
 	public boolean function isSingleton( string beanName ) {
+		discoverBeans( variables.folders );
 		if ( structKeyExists( variables.beanInfo, beanName ) ) {
 			return variables.beanInfo[ beanName ].isSingleton;
 		} else if ( structKeyExists( variables, 'parent' ) ) {
@@ -132,18 +146,20 @@ component {
 	// are responsible for dealing with that logic (it's safe to reload a child but
 	// if you reload the parent, you must reload *all* child factories to ensure
 	// things stay consistent!)
-	public void function load() {
+	public any function load() {
 		discoverBeans( variables.folders );
 		variables.beanCache = { };
 		for ( var key in variables.beanInfo ) {
 			if ( variables.beanInfo[ key ].isSingleton ) getBean( key );
 		}
+        return this;
 	}
 	
 	
 	// set the parent bean factory
-	public void function setParent( any parent ) {
+	public any function setParent( any parent ) {
 		variables.parent = parent;
+        return this;
 	}
 	
 	// PRIVATE METHODS
@@ -221,7 +237,7 @@ component {
 				return remaining;
 			}
 		} else {
-			var webroot = replace( expandPath( '/' ), '\', '/', 'all' );
+			var webroot = replace( expandPath( '/' ), chr(92), '/', 'all' );
 			if ( path.startsWith( webroot ) ) {
 				var rootRelativePath = right( path, len( path ) - len( webroot ) );
 				return replace( left( rootRelativePath, len( rootRelativePath ) - 4 ), '/', '.', 'all' );
@@ -239,7 +255,7 @@ component {
 			var folderArray = listToArray( folders );
 			variables.pathMapCache = { };
 			for ( var f in folderArray ) {
-				discoverBeansInFolder( replace( trim( f ), '\', '/', 'all' ) );
+				discoverBeansInFolder( replace( trim( f ), chr(92), '/', 'all' ) );
 			}
 			variables.discoveryComplete = true;
 		}
@@ -247,8 +263,8 @@ component {
 	
 	
 	private void function discoverBeansInFolder( string mapping ) {
-		var folder = replace( expandPath( mapping ), '\', '/', 'all' );
-		var webroot = replace( expandPath( '/' ), '\', '/', 'all' );
+		var folder = replace( expandPath( mapping ), chr(92), '/', 'all' );
+		var webroot = replace( expandPath( '/' ), chr(92), '/', 'all' );
 		if ( mapping.startsWith( webroot ) ) {
 			// must be an already expanded path!
 			folder = mapping;
@@ -266,7 +282,7 @@ component {
 		// find all the CFCs here:
 		var cfcs = directoryList( folder, variables.config.recurse, 'path', '*.cfc' );
 		for ( var cfcOSPath in cfcs ) {
-			var cfcPath = replace( cfcOSPath, '\', '/', 'all' );
+			var cfcPath = replace( cfcOSPath, chr(92), '/', 'all' );
 			// watch out for excluded paths:
 			var excludePath = false;
 			for ( var pattern in variables.config.exclude ) {
@@ -428,7 +444,7 @@ component {
 			variables.config.exclude = [ ];
 		}
 		for ( var elem in variables.autoExclude ) {
-			arrayAppend( variables.config.exclude, replace( elem, '\', '/', 'all' ) );
+			arrayAppend( variables.config.exclude, replace( elem, chr(92), '/', 'all' ) );
 		}
 		
 		// install bean factory constant:
@@ -446,7 +462,7 @@ component {
 			}
 		}
 		
-		variables.config.version = '0.1.7';
+		variables.config.version = '0.2.0';
 	}
 	
 	
