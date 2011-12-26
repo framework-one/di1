@@ -23,6 +23,7 @@ component {
 		variables.beanInfo = { };
 		variables.beanCache = { };
 		variables.autoExclude = [ '/WEB-INF', '/Application.cfc' ];
+        variables.onLoad = 0;
 		setupFrameworkDefaults();
 		return this;
 	}
@@ -129,9 +130,13 @@ component {
 	}
 	
 	
-	// given a bean (by name or by value), call the named setters with the specified property values
+	// given a bean (by name, by type or by value), call the named
+    // setters with the specified property values
 	public any function injectProperties( any bean, struct properties ) {
-		if ( !isSimpleValue( bean ) ) bean = getBean( bean );
+		if ( isSimpleValue( bean ) ) {
+            if ( containsBean( bean ) ) bean = getBean( bean );
+            else bean = createObject( 'component', bean );
+        }
 		for ( var property in properties ) {
 			var args = { };
 			args[ property ] = properties[ property ];
@@ -147,13 +152,24 @@ component {
 	// if you reload the parent, you must reload *all* child factories to ensure
 	// things stay consistent!)
 	public any function load() {
+        var discovered = structKeyExists( variables, 'discoveryComplete' );
 		discoverBeans( variables.folders );
 		variables.beanCache = { };
 		for ( var key in variables.beanInfo ) {
 			if ( variables.beanInfo[ key ].isSingleton ) getBean( key );
 		}
+        if ( discovered ) onLoadEvent();
         return this;
 	}
+
+
+    // add a listener for processing after a (re)load of the factory
+    // called with just the factory, should be a plain function
+    public any function onLoad( any listener ) {
+        var head = { next = variables.onLoad, listener = listener };
+        variables.onLoad = head;
+        return this;
+    }
 	
 	
 	// set the parent bean factory
@@ -259,6 +275,7 @@ component {
 			}
 			variables.discoveryComplete = true;
 		}
+        onLoadEvent();
 	}
 	
 	
@@ -362,6 +379,15 @@ component {
 			logMissingBean( beanName, resolvingBeanName );
 		}
 	}
+
+
+    private void function onLoadEvent() {
+        var head = variables.onLoad;
+        while ( isStruct( head ) ) {
+            head.listener( this );
+            head = head.next;
+        }
+    }
 	
 	
 	private any function resolveBean( string beanName ) {

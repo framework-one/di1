@@ -14,4 +14,5 @@
 <cfdump var="#bf.getBean('userfish').product.getUserService()#" label="bf.getBean('userfish').product.getUserService()"/>
 <cfdump var="#bf.getBean('magicvalue')#" label="bf.getBean('magicvalue')"/>
 <cfdump var="#bf.getBean('item')#" label="bf.getBean('item') - transient"/>
+<cfset bf.getBean('myconfig').explain() />
 <cfdump var="#bf.getBeanInfo()#"/>

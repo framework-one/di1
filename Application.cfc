@@ -12,6 +12,7 @@ component extends="org.corfield.framework" {
 		var svcPath = expandPath( 'services' );
 		var bf = new ioc( '/model, #svcPath#', { transients = [ 'fish' ] } );
 		bf.setParent( xbf );
+        bf.onLoad( variables.loader );
 		setBeanFactory( bf );
 		
 		// programmatically declare another bean:
@@ -20,4 +21,11 @@ component extends="org.corfield.framework" {
 		// used to track creation of transient beans for illustration purposes:
 		structDelete( application, 'itemCount' );
 	}
+
+    function loader( any ioc ) {
+        var bf = new ioc( '' );
+        bf.addBean( 'config', '/some/xml/file.xml' );
+        bf.declareBean( 'configObject', 'declared.things.myconfig' );
+        ioc.addBean( 'myconfig', bf.injectProperties( 'configObject', { name = "MyConfig" } ) );
+    }
 }
