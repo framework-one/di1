@@ -462,12 +462,12 @@ component {
 							forceCache( bean, beanName );
 						}
 					}
-					var setterMeta = findSetters( bean, info.metadata );
-					setterMeta.bean = bean;
-					accumulator.injection[ beanName ] = setterMeta; 
-					for ( var property in setterMeta.setters ) {
-						resolveBeanCreate( property, accumulator );
-					}
+				}
+				var setterMeta = findSetters( bean, info.metadata );
+				setterMeta.bean = bean;
+				accumulator.injection[ beanName ] = setterMeta; 
+				for ( var property in setterMeta.setters ) {
+					resolveBeanCreate( property, accumulator );
 				}
 				accumulator.bean = bean;
 			} else if ( structKeyExists( info, 'value' ) ) {
