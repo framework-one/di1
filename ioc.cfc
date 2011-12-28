@@ -77,20 +77,7 @@ component {
 	public any function getBean( string beanName ) {
 		discoverBeans( variables.folders );
 		if ( structKeyExists( variables.beanInfo, beanName ) ) {
-			var info = variables.beanInfo[ beanName ];
-			if ( info.isSingleton ) {
-				// cache on the qualified bean name:
-				var qualifiedName = beanName;
-				if ( structKeyExists( info, 'name' ) && structKeyExists( info, 'qualifier' ) ) {
-					qualifiedName = info.name & info.qualifier;
-				}
-				if ( !structKeyExists( variables.beanCache, qualifiedName ) ) {
-					variables.beanCache[ qualifiedName ] = resolveBean( beanName );
-				}
-				return variables.beanCache[ qualifiedName ];
-			} else {
-				return resolveBean( beanName );
-			}
+			return resolveBean( beanName );
 		} else if ( structKeyExists( variables, 'parent' ) ) {
 			return variables.parent.getBean( beanName );
 		} else {
@@ -183,7 +170,27 @@ component {
 	private boolean function beanIsTransient( string singleDir, string dir, string beanName ) {
 		return singleDir == 'bean' || structKeyExists( variables.transients, dir );
 	}
-	
+
+
+	private any function cachable( string beanName) {
+		var newObject = false;
+		var info = variables.beanInfo[ beanName ];
+		if ( info.isSingleton ) {
+			// cache on the qualified bean name:
+			var qualifiedName = beanName;
+			if ( structKeyExists( info, 'name' ) && structKeyExists( info, 'qualifier' ) ) {
+			    qualifiedName = info.name & info.qualifier;
+			}
+			if ( !structKeyExists( variables.beanCache, qualifiedName ) ) {
+			    variables.beanCache[ qualifiedName ] = createObject( 'component', info.cfc );
+				newObject = true;
+			}
+			return { bean = variables.beanCache[ qualifiedName ], newObject = newObject };
+		} else {
+		    return { bean = createObject( 'component', info.cfc ), newObject = true };
+		}
+	}
+
 	
 	private struct function cleanMetadata( string cfc ) {
 		var baseMetadata = getComponentMetadata( cfc );
@@ -358,6 +365,19 @@ component {
 	}
 	
 	
+	private any function forceCache( any bean, string beanName) {
+		var info = variables.beanInfo[ beanName ];
+		if ( info.isSingleton ) {
+			// cache on the qualified bean name:
+			var qualifiedName = beanName;
+			if ( structKeyExists( info, 'name' ) && structKeyExists( info, 'qualifier' ) ) {
+			    qualifiedName = info.name & info.qualifier;
+			}
+		    variables.beanCache[ qualifiedName ] = bean;
+		}
+	}
+
+	
 	private void function logMissingBean( string beanName, string resolvingBeanName = '' ) {
 		var sys = createObject( 'java', 'java.lang.System' );
 		if ( len( resolvingBeanName ) ) {
@@ -419,30 +439,35 @@ component {
 		if ( structKeyExists( variables.beanInfo, beanName ) ) {
 			var info = variables.beanInfo[ beanName ];
 			if ( structKeyExists( info, 'cfc' ) ) {
-				// use createObject so we have control over initialization:
-				bean = createObject( 'component', info.cfc );
-				if ( structKeyExists( info.metadata, 'constructor' ) ) {
-					var args = { };
-					for ( var arg in info.metadata.constructor ) {
-						var argBean = resolveBeanCreate( arg, accumulator );
-						// this throws a non-intuitive exception unless we step in...
-						if ( !structKeyExists( argBean, 'bean' ) ) {
-							throw 'bean not found: #arg#; while resolving constructor arguments for #beanName#';
+				var metaBean = cachable( beanName );
+				bean = metaBean.bean;
+				if ( metaBean.newObject ) {
+				    if ( structKeyExists( info.metadata, 'constructor' ) ) {
+					    var args = { };
+						for ( var arg in info.metadata.constructor ) {
+							var argBean = resolveBeanCreate( arg, accumulator );
+							// this throws a non-intuitive exception unless we step in...
+							if ( !structKeyExists( argBean, 'bean' ) ) {
+								throw 'bean not found: #arg#; while resolving constructor arguments for #beanName#';
+							}
+							args[ arg ] = argBean.bean;
 						}
-						args[ arg ] = argBean.bean;
+						var __ioc_newBean = evaluate( 'bean.init( argumentCollection = args )' );
+						// if the constructor returns anything, it becomes the bean
+						// this allows for smart constructors that return things other
+						// than the CFC being created, such as implicit factory beans
+						// and automatic singletons etc (rare practices in CFML but...)
+						if ( isDefined( '__ioc_newBean' ) ) {
+						    bean = __ioc_newBean;
+							forceCache( bean, beanName );
+						}
 					}
-					var __ioc_newBean = evaluate( 'bean.init( argumentCollection = args )' );
-					// if the constructor returns anything, it becomes the bean
-					// this allows for smart constructors that return things other
-					// than the CFC being created, such as implicit factory beans
-					// and automatic singletons etc (rare practices in CFML but...)
-					if ( isDefined( '__ioc_newBean' ) ) bean = __ioc_newBean;
-				}
-				var setterMeta = findSetters( bean, info.metadata );
-				setterMeta.bean = bean;
-				accumulator.injection[ beanName ] = setterMeta; 
-				for ( var property in setterMeta.setters ) {
-					resolveBeanCreate( property, accumulator );
+					var setterMeta = findSetters( bean, info.metadata );
+					setterMeta.bean = bean;
+					accumulator.injection[ beanName ] = setterMeta; 
+					for ( var property in setterMeta.setters ) {
+						resolveBeanCreate( property, accumulator );
+					}
 				}
 				accumulator.bean = bean;
 			} else if ( structKeyExists( info, 'value' ) ) {

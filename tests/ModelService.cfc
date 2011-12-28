@@ -15,8 +15,11 @@ component extends="mxunit.framework.TestCase" {
     }
 
     function shouldInjectUserServiceIntoProduct() {
+        assertEquals( 0, application.userServiceCount );
         var svc1 = variables.factory.getBean( "userService" );
+        assertEquals( 1, application.userServiceCount );
         var svc2 = variables.factory.getBean( "userService" );
+        assertEquals( 1, application.userServiceCount );
         var svc3 = variables.factory.getBean( "product" );
         assertSame( svc1, svc2 );
         assertEquals( 1, svc1.getId() );
