@@ -26,6 +26,8 @@
       <testcase name="tests.AddBean" packageName="tests.AddBean"/>
       <testcase name="tests.Mapping" packageName="tests.Mapping"/>
       <testcase name="tests.ExtraBeans" packageName="tests.ExtraBeans"/>
+      <testcase name="tests.Model" packageName="tests.Model"/>
+      <testcase name="tests.ModelService" packageName="tests.ModelService"/>
     </mxunittask>
     <junitreport todir="${basedir}/tests/report">
       <fileset dir="${basedir}/tests/results">

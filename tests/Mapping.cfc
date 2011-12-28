@@ -27,4 +27,24 @@ component extends="mxunit.framework.TestCase" {
         assertEquals( 2, application.itemCount );
     }
 
+    function shouldAcceptExpandedPath() {
+        var servicePath = expandPath( "/tests/services" );
+        var factory = new ioc( servicePath );
+        assertTrue( factory.containsBean( "user" ) );
+        assertTrue( factory.containsBean( "userService" ) );
+        var svc1 = factory.getBean( "user" );
+        var svc2 = factory.getBean( "userService" );
+        assertSame( svc1, svc2 );
+    }
+
+    function shouldAcceptRelativePath() {
+        var servicePath = "/tests/services";
+        var factory = new ioc( servicePath );
+        assertTrue( factory.containsBean( "user" ) );
+        assertTrue( factory.containsBean( "userService" ) );
+        var svc1 = factory.getBean( "user" );
+        var svc2 = factory.getBean( "userService" );
+        assertSame( svc1, svc2 );
+    }
+
 }
