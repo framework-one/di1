@@ -16,3 +16,5 @@ folder name, e.g.,
 
 Folder names may be singular or plural. DI/1 assumes that if a folder name ends in
 "s" it can remove that to get the singular name.
+
+See https://github.com/seancorfield/di1/wiki for more detail.
