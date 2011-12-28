@@ -1,5 +1,10 @@
-﻿// caution: requires FW/1 2.0 Alpha 5 or later!!
-component extends="org.corfield.framework" {
+﻿component {
+    this.name = "InjectOneTests";
+    // used to test search via mapping:
+    this.mappings[ "/goldfish/trumpets" ] = expandPath( "/tests/extrabeans" );
+}
+
+/*
 	this.mappings[ '/goldfish/trumpets' ] = expandPath( '/extrabeans' );
 	function setupApplication() {
 		var xbf = new ioc( '/goldfish/trumpets',
@@ -23,9 +28,15 @@ component extends="org.corfield.framework" {
 	}
 
     function loader( any ioc ) {
-        var bf = new ioc( '' );
-        bf.addBean( 'config', '/some/xml/file.xml' );
-        bf.declareBean( 'configObject', 'declared.things.myconfig' );
-        ioc.addBean( 'myconfig', bf.injectProperties( 'configObject', { name = "MyConfig" } ) );
+        ioc.addBean( 'myconfig1',
+                     new ioc( '' )
+                     .addBean( 'config', '/some/xml/file.xml' )
+                     .declareBean( 'configObject', 'declared.things.myconfig' )
+                     .injectProperties( 'configObject',
+                                        { name = "MyConfig" } ) );
+        ioc.addBean( 'myconfig2',
+                     ioc.injectProperties(
+                         new declared.things.myconfig( '/some/other/file.xml' ),
+                         { name = "MyConfigBean" } ) );
     }
-}
+*/
