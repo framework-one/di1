@@ -18,6 +18,14 @@ component extends="mxunit.framework.TestCase" {
         assertSame( svc1, svc2 );
     }
 
+    function shouldHavePintoAndPintoBean() {
+        assertTrue( variables.factory.containsBean( "pintoBean" ) );
+        assertTrue( variables.factory.containsBean( "pinto" ) );
+        var bean1 = variables.factory.getBean( "pintoBean" );
+        var bean2 = variables.factory.getBean( "pinto" );
+        assertNotSame( bean1, bean2 );
+    }
+
     function shouldHaveUserAndUserFish() {
         assertTrue( variables.factory.containsBean( "userFish" ) );
         assertTrue( variables.factory.containsBean( "user" ) );
