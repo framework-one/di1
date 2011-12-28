@@ -13,20 +13,20 @@
 //				singulars = { sheep = 'bean' }
 //			}
 //		);
-		// demonstrate passing expanded path under webroot:
-		var svcPath = expandPath( 'services' );
-		var bf = new ioc( '/model, #svcPath#', { transients = [ 'fish' ] } );
-		bf.setParent( xbf );
+//		// demonstrate passing expanded path under webroot:
+//		var svcPath = expandPath( 'services' );
+//		var bf = new ioc( '/model, #svcPath#', { transients = [ 'fish' ] } );
+//		bf.setParent( xbf );
         bf.onLoad( variables.loader );
-		setBeanFactory( bf );
-		
+//		setBeanFactory( bf );
+//		
 		// programmatically declare another bean:
 		bf.declareBean( 'declaredBean', 'declared.things.example', false );
-		
-		// used to track creation of transient beans for illustration purposes:
-		structDelete( application, 'itemCount' );
-	}
-
+//		
+//		// used to track creation of transient beans for illustration purposes:
+//		structDelete( application, 'itemCount' );
+//	}
+//
     function loader( any ioc ) {
 //        ioc.addBean( 'myconfig1',
 //                     new ioc( '' )

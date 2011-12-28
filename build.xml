@@ -24,10 +24,13 @@
       <testcase name="tests.InjectProperties" packageName="tests.InjectProperties"/>
       <testcase name="tests.Parent" packageName="tests.Parent"/>
       <testcase name="tests.AddBean" packageName="tests.AddBean"/>
+      <testcase name="tests.DeclareBean" packageName="tests.DeclareBean"/>
       <testcase name="tests.Mapping" packageName="tests.Mapping"/>
       <testcase name="tests.ExtraBeans" packageName="tests.ExtraBeans"/>
       <testcase name="tests.Model" packageName="tests.Model"/>
       <testcase name="tests.ModelService" packageName="tests.ModelService"/>
+      <testcase name="tests.OnLoad" packageName="tests.OnLoad"/>
+      <testcase name="tests.Transient" packageName="tests.Transient"/>
     </mxunittask>
     <junitreport todir="${basedir}/tests/report">
       <fileset dir="${basedir}/tests/results">

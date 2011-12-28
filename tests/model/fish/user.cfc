@@ -5,10 +5,12 @@ component accessors="true" {
 		variables.product = product;
 	}
 
-	function setFunny() { }
-
     function getProduct() {
         return variables.product;
+    }
+
+    function itemTest() {
+        return structKeyExists( variables, "item" ) ? variables.item : "missing";
     }
 
 }

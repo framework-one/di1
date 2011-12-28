@@ -23,7 +23,7 @@ component {
 		variables.beanInfo = { };
 		variables.beanCache = { };
 		variables.autoExclude = [ '/WEB-INF', '/Application.cfc' ];
-        variables.onLoad = 0;
+        variables.listeners = 0;
 		setupFrameworkDefaults();
 		return this;
 	}
@@ -153,8 +153,8 @@ component {
     // add a listener for processing after a (re)load of the factory
     // called with just the factory, should be a plain function
     public any function onLoad( any listener ) {
-        var head = { next = variables.onLoad, listener = listener };
-        variables.onLoad = head;
+        var head = { next = variables.listeners, listener = listener };
+        variables.listeners = head;
         return this;
     }
 	
@@ -402,7 +402,7 @@ component {
 
 
     private void function onLoadEvent() {
-        var head = variables.onLoad;
+        var head = variables.listeners;
         while ( isStruct( head ) ) {
             head.listener( this );
             head = head.next;
