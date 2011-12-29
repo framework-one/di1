@@ -139,13 +139,11 @@ component {
 	// if you reload the parent, you must reload *all* child factories to ensure
 	// things stay consistent!)
 	public any function load() {
-        var discovered = structKeyExists( variables, 'discoveryComplete' );
 		discoverBeans( variables.folders );
 		variables.beanCache = { };
 		for ( var key in variables.beanInfo ) {
 			if ( variables.beanInfo[ key ].isSingleton ) getBean( key );
 		}
-        if ( discovered ) onLoadEvent();
         return this;
 	}
 
@@ -404,7 +402,16 @@ component {
     private void function onLoadEvent() {
         var head = variables.listeners;
         while ( isStruct( head ) ) {
-            head.listener( this );
+            if ( isCustomFunction( head.listener ) ) {
+                head.listener( this );
+            } else if ( isObject( head.listener ) ) {
+                head.listener.onLoad( this );
+            } else if ( isSimpleValue( head.listener ) &&
+                        containsBean( head.listener ) ) {
+                getBean( head.listener ).onLoad( this );
+            } else {
+                throw "invalid onLoad listener registered: #head.listener.toString()#";
+            }
             head = head.next;
         }
     }
