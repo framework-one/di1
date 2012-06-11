@@ -166,7 +166,12 @@ component {
 	// PRIVATE METHODS
 	
 	private boolean function beanIsTransient( string singleDir, string dir, string beanName ) {
-		return singleDir == 'bean' || structKeyExists( variables.transients, dir );
+		if ( structKeyExists( variables.config, "singletonPattern" ) ) {
+			// check if bean matches regex
+			return refindNoCase( variables.config.singletonPattern, beanName ) == 0;
+		} else {
+			return singleDir == 'bean' || structKeyExists( variables.transients, dir );
+		}
 	}
 
 
@@ -519,7 +524,7 @@ component {
 				variables.transients[ transientFolder ] = true;
 			}
 		}
-		
+				
 		variables.config.version = '0.3.0';
 	}
 	
