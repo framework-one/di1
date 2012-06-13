@@ -1,7 +1,11 @@
 component extends="mxunit.framework.TestCase" {
-		
+	
 	function setup() {
-		transients = ['Coffee','Tea','Burger','Pizza'];
+		/** 
+		* Note that although 'BeanFactory' and 'BarService' match the singletonpattern  
+		* they are considered singletons as in the beans folder
+		**/		
+		transients = ['BarService','Beer','BeerFactory','Wine','Coffee','Tea','Burger','Pizza'];
 		singletons = ['DrinksService','FoodFactory'];
 		
 		variables.factory = new ioc( "/tests/singletonPattern", { singletonPattern = ".+(Service|Factory)$" } );
@@ -15,17 +19,17 @@ component extends="mxunit.framework.TestCase" {
 		assertTrue( variables.factory.isSingleton( arguments.beanname ) );
 		instanceA = variables.factory.getBean( arguments.beanname );
 		instanceB = variables.factory.getBean( arguments.beanname );
-		assertTrue( instanceA.getinstanceid() == instanceB.getinstanceid() );
+		assertSame( instanceA, instanceB );
 	}
 		
 	/**
 	* @mxunit:dataprovider transients
 	**/
 	function checkForTransients( beanname ) {
-		assertTrue( variables.factory.containsBean( beanname ) );
+		//assertTrue( variables.factory.containsBean( beanname ) );
 		assertFalse( variables.factory.isSingleton( beanname ) );
 		instanceA = variables.factory.getBean( arguments.beanname );
 		instanceB = variables.factory.getBean( arguments.beanname );
-		assertTrue( instanceA.getinstanceid() != instanceB.getinstanceid() );
+		assertNotSame( instanceA, instanceB );
 	}
 }
