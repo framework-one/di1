@@ -1,6 +1,6 @@
 /** 
 * Note that although this beanname matches the singletonpattern it is considered 
-* a singleton as it's in the beans folder
+* a transient as it's in the beans folder
 **/ 
 component accessors="true" {
 

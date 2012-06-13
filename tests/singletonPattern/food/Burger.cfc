@@ -2,9 +2,9 @@
 
 	property instanceid;
 
-    function init() {
-    	variables.instanceid = CreateUUID();
-	    return this;
-    }
+	function init() {
+		variables.instanceid = CreateUUID();
+		return this;
+	}
 
 }
