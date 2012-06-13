@@ -520,7 +520,7 @@ component {
 			}
 		}
 				
-		variables.config.version = '0.3.0';
+		variables.config.version = '0.3.1';
 	}
 	
 	
