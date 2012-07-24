@@ -33,7 +33,7 @@ component {
     // programmatically register an alias
     public any function addAlias( string aliasName, string beanName ) {
 		discoverBeans( variables.folders );
-        variables.beanInfo[ aliasName ] = variable.beanInfo[ beanName ];
+        variables.beanInfo[ aliasName ] = variables.beanInfo[ beanName ];
         return this;
     }
 
