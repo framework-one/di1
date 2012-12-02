@@ -523,7 +523,7 @@ component {
 			}
 		}
 				
-		variables.config.version = '0.3.3';
+		variables.config.version = '0.4.0';
 	}
 	
 	
