@@ -194,10 +194,10 @@ component {
 		var baseMetadata = getComponentMetadata( cfc );
 		var iocMeta = { setters = { }, pruned = false };
 		var md = { extends = baseMetadata };
+		// gather up setters based on metadata:
+		var implicitSetters = false; // #24 moved out of loop so that once implicit setters are enabled, they stay enabled!
 		do {
 			md = md.extends;
-			// gather up setters based on metadata:
-			var implicitSetters = false;
 			// we have implicit setters if: accessors="true" or persistent="true"
 			if ( structKeyExists( md, 'persistent' ) && isBoolean( md.persistent ) ) {
 				implicitSetters = md.persistent;
