@@ -233,7 +233,7 @@ component {
 								var m = arrayLen( func.parameters );
 								for ( var j = 1; j <= m; ++j ) {
 									var arg = func.parameters[ j ];
-									iocMeta.constructor[ arg.name ] = structKeyExists( arg, 'type' ) ? arg.type : 'any';
+									iocMeta.constructor[ arg.name ] = structKeyExists( arg, 'required' ) ? arg.required : false;
 								}
 							}
 						}
@@ -454,10 +454,11 @@ component {
 						for ( var arg in info.metadata.constructor ) {
 							var argBean = resolveBeanCreate( arg, accumulator );
 							// this throws a non-intuitive exception unless we step in...
-							if ( !structKeyExists( argBean, 'bean' ) ) {
+							if ( structKeyExists( argBean, 'bean' ) ) {
+							    args[ arg ] = argBean.bean;
+                            } else if ( info.metadata.constructor[ arg ] ) {
 								throw 'bean not found: #arg#; while resolving constructor arguments for #beanName#';
 							}
-							args[ arg ] = argBean.bean;
 						}
 						var __ioc_newBean = evaluate( 'bean.init( argumentCollection = args )' );
 						// if the constructor returns anything, it becomes the bean
@@ -520,7 +521,7 @@ component {
 			}
 		}
 				
-		variables.config.version = '0.3.2';
+		variables.config.version = '0.3.3';
 	}
 	
 	
