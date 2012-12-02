@@ -1,3 +1,3 @@
-component {
+component accessors="true" {
 	property userService;
 }
