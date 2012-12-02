@@ -18,6 +18,7 @@
                 haltonerror="false" haltonfailure="false"
                 verbose="false"
                 errorproperty="testfailed" failureproperty="testfailed">
+      <testcase name="tests.Circular" packageName="tests.Circular"/>
       <testcase name="tests.Empty" packageName="tests.Empty"/>
       <testcase name="tests.BeanInfo" packageName="tests.BeanInfo"/>
       <testcase name="tests.Constant" packageName="tests.Constant"/>

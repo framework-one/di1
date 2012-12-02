@@ -471,12 +471,14 @@ component {
 						}
 					}
 				}
-				var setterMeta = findSetters( bean, info.metadata );
-				setterMeta.bean = bean;
-				accumulator.injection[ beanName ] = setterMeta; 
-				for ( var property in setterMeta.setters ) {
-					resolveBeanCreate( property, accumulator );
-				}
+                if ( !structKeyExists( accumulator.injection, beanName ) ) {
+				    var setterMeta = findSetters( bean, info.metadata );
+				    setterMeta.bean = bean;
+				    accumulator.injection[ beanName ] = setterMeta; 
+				    for ( var property in setterMeta.setters ) {
+					    resolveBeanCreate( property, accumulator );
+				    }
+                }
 				accumulator.bean = bean;
 			} else if ( structKeyExists( info, 'value' ) ) {
 				accumulator.bean = info.value;
