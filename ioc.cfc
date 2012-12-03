@@ -165,11 +165,8 @@ component {
 	
 	// PRIVATE METHODS
 	
-private boolean function beanIsTransient( string singleDir, string dir, string beanName ) {
-		return singleDir == 'bean' 
-			|| structKeyExists( variables.transients, dir ) 
-			|| ( structKeyExists( variables.config, "singletonPattern" ) && refindNoCase( variables.config.singletonPattern, beanName ) == 0 )
-			|| ( structKeyExists( variables.config, "transientPattern" ) && refindNoCase( variables.config.transientPattern, beanName ) > 0 );
+	private boolean function beanIsTransient( string singleDir, string dir, string beanName ) {
+		return singleDir == 'bean' || structKeyExists( variables.transients, dir ) || ( structKeyExists( variables.config, "singletonPattern" ) && refindNoCase( variables.config.singletonPattern, beanName ) == 0 ) || ( structKeyExists( variables.config, "transientPattern" ) && refindNoCase( variables.config.transientPattern, beanName ) > 0 );
 	}
 
 
