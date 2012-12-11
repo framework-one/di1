@@ -18,20 +18,22 @@
                 haltonerror="false" haltonfailure="false"
                 verbose="false"
                 errorproperty="testfailed" failureproperty="testfailed">
-      <testcase name="tests.Circular" packageName="tests.Circular"/>
-      <testcase name="tests.Empty" packageName="tests.Empty"/>
-      <testcase name="tests.BeanInfo" packageName="tests.BeanInfo"/>
-      <testcase name="tests.Constant" packageName="tests.Constant"/>
-      <testcase name="tests.InjectProperties" packageName="tests.InjectProperties"/>
-      <testcase name="tests.Parent" packageName="tests.Parent"/>
       <testcase name="tests.AddBean" packageName="tests.AddBean"/>
+      <testcase name="tests.BeanInfo" packageName="tests.BeanInfo"/>
+      <testcase name="tests.Circular" packageName="tests.Circular"/>
+      <testcase name="tests.Constant" packageName="tests.Constant"/>
       <testcase name="tests.DeclareBean" packageName="tests.DeclareBean"/>
-      <testcase name="tests.Mapping" packageName="tests.Mapping"/>
+      <testcase name="tests.Empty" packageName="tests.Empty"/>
       <testcase name="tests.ExtraBeans" packageName="tests.ExtraBeans"/>
+      <testcase name="tests.InjectProperties" packageName="tests.InjectProperties"/>
+      <testcase name="tests.Mapping" packageName="tests.Mapping"/>
       <testcase name="tests.Model" packageName="tests.Model"/>
       <testcase name="tests.ModelService" packageName="tests.ModelService"/>
       <testcase name="tests.OnLoad" packageName="tests.OnLoad"/>
+      <testcase name="tests.Parent" packageName="tests.Parent"/>
+      <testcase name="tests.singletonPattern" packageName="tests.singletonPatern"/>
       <testcase name="tests.Transient" packageName="tests.Transient"/>
+      <testcase name="tests.transientPattern" packageName="tests.transientPattern"/>
     </mxunittask>
     <junitreport todir="${basedir}/tests/report">
       <fileset dir="${basedir}/tests/results">

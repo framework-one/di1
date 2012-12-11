@@ -7,10 +7,7 @@ component extends="mxunit.framework.TestCase" {
 		variables.factory = new ioc( "/tests/transientPattern", { transientPattern = ".+(Foo)$" } );
 	}
 		
-	/**
-	* @mxunit:dataprovider singletons
-	**/
-	function checkForSingletons( required beanname ) {
+	function checkForSingletons( required beanname ) dataprovider="singletons" {
 		assertTrue( variables.factory.containsBean( arguments.beanname ) );
 		assertTrue( variables.factory.isSingleton( arguments.beanname ) );
 		instanceA = variables.factory.getBean( arguments.beanname );
@@ -18,10 +15,7 @@ component extends="mxunit.framework.TestCase" {
 		assertSame( instanceA, instanceB );
 	}
 		
-	/**
-	* @mxunit:dataprovider transients
-	**/
-	function checkForTransients( beanname ) {
+	function checkForTransients( beanname ) dataprovider="transients" {
 		//assertTrue( variables.factory.containsBean( beanname ) );
 		assertFalse( variables.factory.isSingleton( beanname ) );
 		instanceA = variables.factory.getBean( arguments.beanname );
