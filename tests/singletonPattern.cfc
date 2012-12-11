@@ -26,4 +26,14 @@ component extends="mxunit.framework.TestCase" {
 		instanceB = variables.factory.getBean( arguments.beanname );
 		assertNotSame( instanceA, instanceB );
 	}
+
+    function checkPatternsAreExclusive() {
+        try {
+            var bad = new ioc( '', { singletonPattern = '', transientPattern = '' } );
+            fail( 'Both arguments were allowed' );
+        } catch ( any e ) {
+            assertEquals( 'singletonPattern and transientPattern are mutually exclusive', e.message );
+        }
+    }
+
 }

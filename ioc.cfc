@@ -527,6 +527,11 @@ component {
 				variables.transients[ transientFolder ] = true;
 			}
 		}
+
+        if ( structKeyExists( variables.config, 'singletonPattern' ) &&
+             structKeyExists( variables.config, 'transientPattern' ) ) {
+            throw 'singletonPattern and transientPattern are mutually exclusive';
+        }
 				
 		variables.config.version = '0.4.1';
 	}
