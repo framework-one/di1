@@ -102,6 +102,12 @@ component {
 			return { beanInfo = variables.beanInfo };
 		}
 	}
+
+
+    // return the DI/1 version
+    public string function getVersion() {
+        return variables.config.version;
+    }
 	
 	
 	// return true iff bean is known to be a singleton
