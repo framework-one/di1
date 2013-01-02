@@ -116,7 +116,11 @@ component {
 		if ( structKeyExists( variables.beanInfo, beanName ) ) {
 			return variables.beanInfo[ beanName ].isSingleton;
 		} else if ( structKeyExists( variables, 'parent' ) ) {
-			return variables.parent.isSingleton( beanName );
+            try {
+			    return variables.parent.isSingleton( beanName );
+            } catch ( any e ) {
+                return false; // parent doesn't know the bean therefore is it not singleton
+            }
 		} else {
 			return false; // we don't know the bean therefore it is not a managed singleton
 		}
@@ -539,7 +543,7 @@ component {
             throw 'singletonPattern and transientPattern are mutually exclusive';
         }
 				
-		variables.config.version = '0.4.1';
+		variables.config.version = '0.4.2';
 	}
 	
 	
