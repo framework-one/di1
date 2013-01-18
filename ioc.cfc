@@ -317,7 +317,12 @@ component {
 		}
 		mapping = replace( mapping, '/', '.', 'all' );
 		// find all the CFCs here:
-		var cfcs = directoryList( folder, variables.config.recurse, 'path', '*.cfc' );
+        var cfcs = [ ];
+        try {
+		    cfcs = directoryList( folder, variables.config.recurse, 'path', '*.cfc' );
+        } catch ( any e ) {
+            // assume bad path - ignore it, cfcs is empty list
+        }
 		for ( var cfcOSPath in cfcs ) {
 			var cfcPath = replace( cfcOSPath, chr(92), '/', 'all' );
 			// watch out for excluded paths:
@@ -543,7 +548,7 @@ component {
             throw 'singletonPattern and transientPattern are mutually exclusive';
         }
 				
-		variables.config.version = '0.4.2';
+		variables.config.version = '0.4.3';
 	}
 	
 	
