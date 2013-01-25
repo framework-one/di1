@@ -1,5 +1,5 @@
 ﻿/*
-	Copyright (c) 2010-2012, Sean Corfield
+	Copyright (c) 2010-2013, Sean Corfield
 
 	Licensed under the Apache License, Version 2.0 (the "License");
 	you may not use this file except in compliance with the License.
@@ -89,15 +89,19 @@ component {
 	public any function getBeanInfo( string beanName = '' ) {
 		discoverBeans( variables.folders );
 		if ( len( beanName ) ) {
+            // ask about a specific bean:
 			if ( structKeyExists( variables.beanInfo, beanName ) ) {
 				return variables.beanInfo[ beanName ];
-			} else if ( structKeyExists( variables, 'parent' ) ) {
-				return variables.parent.getBeanInfo( beanName );
-			} else {
-				throw 'bean not found: #beanName#';
 			}
+            if ( structKeyExists( variables, 'parent' ) ) {
+                return parentBeanInfo( beanName );
+			}
+			throw 'bean not found: #beanName#';
 		} else if ( structKeyExists( variables, 'parent' ) ) {
-			return { beanInfo = variables.beanInfo, parent = variables.parent.getBeanInfo() };
+			return {
+                beanInfo = variables.beanInfo,
+                parent = parentBeanInfoList()
+            };
 		} else {
 			return { beanInfo = variables.beanInfo };
 		}
@@ -435,6 +439,36 @@ component {
             head = head.next;
         }
     }
+
+
+    private any function parentBeanInfo( string beanName ) {
+        // intended to be adaptable to whatever the parent is:
+        if ( structKeyExists( variables.parent, 'getBeanInfo' ) ) {
+            // smells like DI/1 or compatible:
+		    return variables.parent.getBeanInfo( beanName );
+        }
+        if ( structKeyExists( variables.parent, 'getBeanDefinition' ) ) {
+            // smells like ColdSpring or compatible:
+            return variables.parent.getBeanDefinition( beanName );
+        }
+        // unknown:
+        return { };
+    }
+
+
+    private any function parentBeanInfoList() {
+        // intended to be adaptable to whatever the parent is:
+        if ( structKeyExists( variables.parent, 'getBeanInfo' ) ) {
+            // smells like DI/1 or compatible:
+            return variables.parent.getBeanInfo();
+        }
+        if ( structKeyExists( variables.parent, 'getBeanDefinitionList' ) ) {
+            // smells like ColdSpring or compatible:
+            return variables.parent.getBeanDefinitionList();
+        }
+        // unknown
+        return { };
+    }
 	
 	
 	private any function resolveBean( string beanName ) {
@@ -548,7 +582,7 @@ component {
             throw 'singletonPattern and transientPattern are mutually exclusive';
         }
 				
-		variables.config.version = '0.4.3';
+		variables.config.version = '0.4.4';
 	}
 	
 	
