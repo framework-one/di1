@@ -22,6 +22,7 @@ component {
 		variables.config = config;
 		variables.beanInfo = { };
 		variables.beanCache = { };
+        variables.settersInfo = { };
 		variables.autoExclude = [ '/WEB-INF', '/Application.cfc' ];
         variables.listeners = 0;
 		setupFrameworkDefaults();
@@ -526,7 +527,10 @@ component {
 					}
 				}
                 if ( !structKeyExists( accumulator.injection, beanName ) ) {
-				    var setterMeta = findSetters( bean, info.metadata );
+                    if ( !structKeyExists( variables.settersInfo, beanName ) ) {
+                        variables.settersInfo[ beanName ] = findSetters( bean, info.metadata );
+                    }
+				    var setterMeta = variables.settersInfo[ beanName ];
 				    setterMeta.bean = bean;
 				    accumulator.injection[ beanName ] = setterMeta; 
 				    for ( var property in setterMeta.setters ) {
@@ -582,7 +586,7 @@ component {
             throw 'singletonPattern and transientPattern are mutually exclusive';
         }
 				
-		variables.config.version = '0.4.4';
+		variables.config.version = '0.4.5';
 	}
 	
 	
