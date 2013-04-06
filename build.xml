@@ -43,6 +43,7 @@
       <report format="frames" todir="${basedir}/tests/report" styledir="${mxunit.home}/ant/xsl"/>
     </junitreport>
     <echo message="Test results: http://${test.server}:${test.port}/tests/report/index.html"/>
+    <fail message="Tests Failed!" if="testfailed"/>
   </target>
 
   <target name="clean">
