@@ -23,6 +23,7 @@
       <testcase name="tests.Circular" packageName="tests.Circular"/>
       <testcase name="tests.Constant" packageName="tests.Constant"/>
       <testcase name="tests.DeclareBean" packageName="tests.DeclareBean"/>
+      <testcase name="tests.defaultarg" packageName="tests.defaultarg"/>
       <testcase name="tests.Empty" packageName="tests.Empty"/>
       <testcase name="tests.ExtraBeans" packageName="tests.ExtraBeans"/>
       <testcase name="tests.InjectProperties" packageName="tests.InjectProperties"/>
@@ -31,7 +32,7 @@
       <testcase name="tests.ModelService" packageName="tests.ModelService"/>
       <testcase name="tests.OnLoad" packageName="tests.OnLoad"/>
       <testcase name="tests.Parent" packageName="tests.Parent"/>
-      <testcase name="tests.singletonPattern" packageName="tests.singletonPatern"/>
+      <testcase name="tests.singletonPattern" packageName="tests.singletonPattern"/>
       <testcase name="tests.Transient" packageName="tests.Transient"/>
       <testcase name="tests.transientPattern" packageName="tests.transientPattern"/>
     </mxunittask>
