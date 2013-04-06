@@ -231,8 +231,9 @@ component {
 				var n = arrayLen( md.properties );
 				for ( var i = 1; i <= n; ++i ) {
 					var property = md.properties[ i ];
-					if ( implicitSetters ||
-							structKeyExists( property, 'setter' ) && isBoolean( property.setter ) && property.setter ) {
+					if ( implicitSetters &&
+						 ( !structKeyExists( property, 'setter' ) ||
+                           isBoolean( property.setter ) && property.setter ) ) {
 						iocMeta.setters[ property.name ] = 'implicit';
 					}
 				}
@@ -586,7 +587,7 @@ component {
             throw 'singletonPattern and transientPattern are mutually exclusive';
         }
 				
-		variables.config.version = '0.4.5';
+		variables.config.version = '0.4.6';
 	}
 	
 	
