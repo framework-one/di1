@@ -551,7 +551,6 @@ component {
 			accumulator.bean = bean;
 		} else {
 			missingBean( beanName );
-			return {};
 		}
 		return accumulator;
 	}
