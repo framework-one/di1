@@ -508,13 +508,29 @@ component {
 				    if ( structKeyExists( info.metadata, 'constructor' ) ) {
 					    var args = { };
 						for ( var arg in info.metadata.constructor ) {
-							var argBean = resolveBeanCreate( arg, accumulator );
-							// this throws a non-intuitive exception unless we step in...
-							if ( structKeyExists( argBean, 'bean' ) ) {
-							    args[ arg ] = argBean.bean;
-                            } else if ( info.metadata.constructor[ arg ] ) {
-								throw 'bean not found: #arg#; while resolving constructor arguments for #beanName#';
-							}
+                            var argBean = { };
+                            // handle known required arguments
+                            if ( info.metadata.constructor[ arg ] ) {
+                                var beanMissing = true;
+                                if ( containsBean( arg ) ) {
+                                    argBean = resolveBeanCreate( arg, accumulator );
+                                    if ( structKeyExists( argBean, 'bean' ) ) {
+                                        args[ arg ] = argBean.bean;
+                                        beanMissing = false;
+                                    }
+                                }
+                                if ( beanMissing ) {
+								    throw 'bean not found: #arg#; while resolving constructor arguments for #beanName#';
+                                }
+                            } else if ( containsBean( arg ) ) {
+                                // optional but present
+							    argBean = resolveBeanCreate( arg, accumulator );
+							    if ( structKeyExists( argBean, 'bean' ) ) {
+							        args[ arg ] = argBean.bean;
+							    }
+                            } else {
+                                // optional but not present
+                            }
 						}
 						var __ioc_newBean = evaluate( 'bean.init( argumentCollection = args )' );
 						// if the constructor returns anything, it becomes the bean
