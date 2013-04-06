@@ -11,4 +11,18 @@ component extends="mxunit.framework.TestCase" {
         assertEquals( 0, user37b.getID() );
     }
 
+    function checkDefaultInitArgThreeArgs() {
+        var factory = new ioc( "/tests/model", { constants = { dsn = "sample" } } );
+        var user37c = factory.getBean( "user37c" );
+        assertEquals( "sample", user37c.getDSN() );
+        assertEquals( 0, user37c.getID() );
+        assertEquals( "Bob", user37c.getName() );
+
+        factory = new ioc( "/tests/model", { constants = { dsn = "sample", name="John" } } );
+        user37c = factory.getBean( "user37c" );
+        assertEquals( "sample", user37c.getDSN() );
+        assertEquals( 0, user37c.getID() );
+        assertEquals( "John", user37c.getName() );
+
+    }
 }
