@@ -103,7 +103,7 @@ component {
 	}
 	
 	
-	// return true iff bean is known to be a singleton
+	// return true if bean is known to be a singleton
 	public boolean function isSingleton( string beanName ) {
 		if ( structKeyExists( variables.beanInfo, beanName ) ) {
 			return variables.beanInfo[ beanName ].isSingleton;
