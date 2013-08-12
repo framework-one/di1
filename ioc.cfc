@@ -547,8 +547,7 @@ component {
                     if ( !structKeyExists( variables.settersInfo, beanName ) ) {
                         variables.settersInfo[ beanName ] = findSetters( bean, info.metadata );
                     }
-				    var setterMeta = variables.settersInfo[ beanName ];
-				    setterMeta.bean = bean;
+				    var setterMeta = {setters=variables.settersInfo[ beanName ].setters, bean=bean};
 				    accumulator.injection[ beanName ] = setterMeta; 
 				    for ( var property in setterMeta.setters ) {
 					    resolveBeanCreate( property, accumulator );
