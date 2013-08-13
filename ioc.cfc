@@ -547,7 +547,10 @@ component {
                     if ( !structKeyExists( variables.settersInfo, beanName ) ) {
                         variables.settersInfo[ beanName ] = findSetters( bean, info.metadata );
                     }
-				    var setterMeta = {setters=variables.settersInfo[ beanName ].setters, bean=bean};
+				    var setterMeta = {
+                        setters = variables.settersInfo[ beanName ].setters,
+                        bean = bean
+                    };
 				    accumulator.injection[ beanName ] = setterMeta; 
 				    for ( var property in setterMeta.setters ) {
 					    resolveBeanCreate( property, accumulator );
@@ -602,7 +605,7 @@ component {
             throw 'singletonPattern and transientPattern are mutually exclusive';
         }
 				
-		variables.config.version = '0.4.7';
+		variables.config.version = '0.4.8';
 	}
 	
 	
