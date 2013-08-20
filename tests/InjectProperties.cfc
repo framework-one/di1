@@ -2,6 +2,7 @@ component extends="mxunit.framework.TestCase" {
 
     function setup() {
         variables.ioc = new ioc( "" );
+        variables.ioc2 = new ioc( "/tests/model" );
     }
 
     function shouldInjectWithType() {
@@ -30,6 +31,13 @@ component extends="mxunit.framework.TestCase" {
         var bean = variables.ioc.injectProperties( "configObject", { name = "ByName" } );
         assertEquals( "ByName", bean.getName() );
         assertEquals( "data", bean.getConfig() );
+    }
+
+    function shouldInjectWithNullValues( numeric userid, string username ) {
+        // use arguments to pass into bean, argument values are null
+        var bean = variables.ioc2.injectProperties( "user2Bean", arguments );
+        assertEquals( "0", bean.getUserid() );
+        assertEquals( "defaultuser", bean.getUsername() );
     }
 
 }

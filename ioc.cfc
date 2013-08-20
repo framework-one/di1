@@ -133,16 +133,18 @@ component {
 
 
 	// given a bean (by name, by type or by value), call the named
-    // setters with the specified property values
+	// setters with the specified property values
 	public any function injectProperties( any bean, struct properties ) {
 		if ( isSimpleValue( bean ) ) {
-            if ( containsBean( bean ) ) bean = getBean( bean );
-            else bean = createObject( 'component', bean );
-        }
+			if ( containsBean( bean ) ) bean = getBean( bean );
+			else bean = createObject( 'component', bean );
+		}
 		for ( var property in properties ) {
-			var args = { };
-			args[ property ] = properties[ property ];
-			evaluate( 'bean.set#property#( argumentCollection = args )' );
+			if ( !isNull( properties[property ] ) ) {
+				var args = { };
+				args[ property ] = properties[ property ];
+				evaluate( 'bean.set#property#( argumentCollection = args )' );
+			}
 		}
 		return bean;
 	}
