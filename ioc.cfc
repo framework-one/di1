@@ -16,7 +16,7 @@
 component {
 
 	// CONSTRUCTOR
-	
+
 	public any function init( string folders, struct config = { } ) {
 		variables.folders = folders;
 		variables.config = config;
@@ -28,7 +28,7 @@ component {
 		setupFrameworkDefaults();
 		return this;
 	}
-	
+
 	// PUBLIC METHODS
 
     // programmatically register an alias
@@ -38,23 +38,23 @@ component {
         return this;
     }
 
-	
+
 	// programmatically register new beans with the factory (add a singleton name/value pair)
 	public any function addBean( string beanName, any beanValue ) {
 		discoverBeans( variables.folders );
 		variables.beanInfo[ beanName ] = { value = beanValue, isSingleton = true };
         return this;
 	}
-	
-	
+
+
 	// return true if the factory (or a parent factory) knows about the requested bean
 	public boolean function containsBean( string beanName ) {
 		discoverBeans( variables.folders );
 		return structKeyExists( variables.beanInfo, beanName ) ||
 				( structKeyExists( variables, 'parent' ) && variables.parent.containsBean( beanName ) );
 	}
-	
-	
+
+
 	// programmatically register new beans with the factory (add an actual CFC)
 	public any function declareBean( string beanName, string dottedPath, boolean isSingleton = true ) {
 		discoverBeans( variables.folders );
@@ -65,15 +65,15 @@ component {
 			singleDir = singular( listLast( dottedPart, '.' ) );
 		}
 		var cfcPath = replace( expandPath( '/' & replace( dottedPath, '.', '/', 'all' ) & '.cfc' ), chr(92), '/', 'all' );
-		var metadata = { 
-			name = beanName, qualifier = singleDir, isSingleton = isSingleton, 
+		var metadata = {
+			name = beanName, qualifier = singleDir, isSingleton = isSingleton,
 			path = cfcPath, cfc = dottedPath, metadata = cleanMetadata( dottedPath )
 		};
 		variables.beanInfo[ beanName ] = metadata;
         return this;
 	}
-	
-	
+
+
 	// return the requested bean, fully populated
 	public any function getBean( string beanName ) {
 		discoverBeans( variables.folders );
@@ -85,7 +85,7 @@ component {
 			throw 'bean not found: #beanName#';
 		}
 	}
-	
+
 	// convenience API for metaprogramming perhaps?
 	public any function getBeanInfo( string beanName = '' ) {
 		discoverBeans( variables.folders );
@@ -113,8 +113,8 @@ component {
     public string function getVersion() {
         return variables.config.version;
     }
-	
-	
+
+
 	// return true iff bean is known to be a singleton
 	public boolean function isSingleton( string beanName ) {
 		discoverBeans( variables.folders );
@@ -130,8 +130,8 @@ component {
 			return false; // we don't know the bean therefore it is not a managed singleton
 		}
 	}
-	
-	
+
+
 	// given a bean (by name, by type or by value), call the named
     // setters with the specified property values
 	public any function injectProperties( any bean, struct properties ) {
@@ -146,8 +146,8 @@ component {
 		}
 		return bean;
 	}
-	
-	
+
+
 	// empty the cache and reload all the singleton beans
 	// note: this does not reload the parent - if you have parent/child factories you
 	// are responsible for dealing with that logic (it's safe to reload a child but
@@ -170,16 +170,16 @@ component {
         variables.listeners = head;
         return this;
     }
-	
-	
+
+
 	// set the parent bean factory
 	public any function setParent( any parent ) {
 		variables.parent = parent;
         return this;
 	}
-	
+
 	// PRIVATE METHODS
-	
+
 	private boolean function beanIsTransient( string singleDir, string dir, string beanName ) {
 		return singleDir == 'bean' ||
             structKeyExists( variables.transients, dir ) ||
@@ -209,7 +209,7 @@ component {
 		}
 	}
 
-	
+
 	private struct function cleanMetadata( string cfc ) {
 		var baseMetadata = getComponentMetadata( cfc );
 		var iocMeta = { setters = { }, pruned = false };
@@ -264,8 +264,8 @@ component {
 		} while ( structKeyExists( md, 'extends' ) );
 		return iocMeta;
 	}
-	
-	
+
+
 	private string function deduceDottedPath( string path, string truePath, string mapping, boolean rootRelative ) {
 		if ( rootRelative ) {
 			var remaining = right( path, len( path ) - len( truePath ) );
@@ -288,8 +288,8 @@ component {
 			}
 		}
 	}
-	
-	
+
+
 	private void function discoverBeans( string folders ) {
 		if ( structKeyExists( variables, 'discoveryComplete' ) ) return;
 		lock name="#application.applicationName#_ioc1_#folders#" type="exclusive" timeout="30" {
@@ -303,8 +303,8 @@ component {
 		}
         onLoadEvent();
 	}
-	
-	
+
+
 	private void function discoverBeansInFolder( string mapping ) {
 		var folder = replace( expandPath( mapping ), chr(92), '/', 'all' );
 		var webroot = replace( expandPath( '/' ), chr(92), '/', 'all' );
@@ -346,8 +346,8 @@ component {
 			var file = listLast( cfcPath, '/' );
 			var beanName = left( file, len( file ) - 4 );
 			var dottedPath = deduceDottedPath( cfcPath, folder, mapping, rootRelative );
-			var metadata = { 
-				name = beanName, qualifier = singleDir, isSingleton = !beanIsTransient( singleDir, dir, beanName ), 
+			var metadata = {
+				name = beanName, qualifier = singleDir, isSingleton = !beanIsTransient( singleDir, dir, beanName ),
 				path = cfcPath, cfc = dottedPath, metadata = cleanMetadata( dottedPath )
 			};
 			if ( structKeyExists( variables.beanInfo, beanName ) ) {
@@ -359,8 +359,8 @@ component {
 			}
 		}
 	}
-	
-	
+
+
 	private struct function findSetters( any cfc, struct iocMeta ) {
 		var liveMeta = { setters = iocMeta.setters };
 		if ( !iocMeta.pruned ) {
@@ -387,8 +387,8 @@ component {
 		}
 		return liveMeta;
 	}
-	
-	
+
+
 	private any function forceCache( any bean, string beanName) {
 		var info = variables.beanInfo[ beanName ];
 		if ( info.isSingleton ) {
@@ -401,7 +401,7 @@ component {
 		}
 	}
 
-	
+
 	private void function logMissingBean( string beanName, string resolvingBeanName = '' ) {
 		var sys = createObject( 'java', 'java.lang.System' );
 		if ( len( resolvingBeanName ) ) {
@@ -410,8 +410,8 @@ component {
 			sys.out.println( 'bean not found: #beanName#' );
 		}
 	}
-	
-	
+
+
 	private void function missingBean( string beanName, string resolvingBeanName = '' ) {
 		if ( variables.config.strict ) {
 			if ( len( resolvingBeanName ) ) {
@@ -471,8 +471,8 @@ component {
         // unknown
         return { };
     }
-	
-	
+
+
 	private any function resolveBean( string beanName ) {
 		// do enough resolution to create and initialization this bean
 		// returns a struct of the bean and a struct of beans and setters still to run
@@ -495,8 +495,8 @@ component {
 		}
 		return partialBean.bean;
 	}
-	
-	
+
+
 	private struct function resolveBeanCreate( string beanName, struct accumulator ) {
 		var bean = 0;
 		if ( structKeyExists( variables.beanInfo, beanName ) ) {
@@ -551,7 +551,7 @@ component {
                         setters = variables.settersInfo[ beanName ].setters,
                         bean = bean
                     };
-				    accumulator.injection[ beanName ] = setterMeta; 
+				    accumulator.injection[ beanName ] = setterMeta;
 				    for ( var property in setterMeta.setters ) {
 					    resolveBeanCreate( property, accumulator );
 				    }
@@ -559,7 +559,7 @@ component {
 				accumulator.bean = bean;
 			} else if ( structKeyExists( info, 'value' ) ) {
 				accumulator.bean = info.value;
-				accumulator.injection[ beanName ] = { bean = info.value, setters = { } }; 
+				accumulator.injection[ beanName ] = { bean = info.value, setters = { } };
 			} else {
 				throw 'internal error: invalid metadata for #beanName#';
 			}
@@ -572,19 +572,19 @@ component {
 		}
 		return accumulator;
 	}
-	
-	
+
+
 	private void function setupFrameworkDefaults() {
 		param name = "variables.config.recurse"		default = true;
 		param name = "variables.config.strict"		default = false;
-		
+
 		if ( !structKeyExists( variables.config, 'exclude' ) ) {
 			variables.config.exclude = [ ];
 		}
 		for ( var elem in variables.autoExclude ) {
 			arrayAppend( variables.config.exclude, replace( elem, chr(92), '/', 'all' ) );
 		}
-		
+
 		// install bean factory constant:
 		variables.beanInfo.beanFactory = { value = this, isSingleton = true };
 		if ( structKeyExists( variables.config, 'constants' ) ) {
@@ -592,7 +592,7 @@ component {
 				variables.beanInfo[ beanName ] = { value = variables.config.constants[ beanName ], isSingleton = true };
 			}
 		}
-		
+
 		variables.transients = { };
 		if ( structKeyExists( variables.config, 'transients' ) ) {
 			for ( var transientFolder in variables.config.transients ) {
@@ -604,13 +604,13 @@ component {
              structKeyExists( variables.config, 'transientPattern' ) ) {
             throw 'singletonPattern and transientPattern are mutually exclusive';
         }
-				
+
 		variables.config.version = '0.4.8';
 	}
-	
-	
+
+
 	private string function singular( string plural ) {
-		if ( structKeyExists( variables.config, 'singulars' ) && 
+		if ( structKeyExists( variables.config, 'singulars' ) &&
 				structKeyExists( variables.config.singulars, plural ) ) {
 			return variables.config.singulars[ plural ];
 		}
@@ -622,5 +622,5 @@ component {
 		}
 		return single;
 	}
-	
+
 }
