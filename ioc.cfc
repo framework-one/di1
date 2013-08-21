@@ -607,7 +607,7 @@ component {
             throw 'singletonPattern and transientPattern are mutually exclusive';
         }
 				
-		variables.config.version = '0.4.8';
+		variables.config.version = '0.4.9';
 	}
 	
 	
