@@ -140,9 +140,11 @@ component {
             else bean = createObject( 'component', bean );
         }
 		for ( var property in properties ) {
-			var args = { };
-			args[ property ] = properties[ property ];
-			evaluate( 'bean.set#property#( argumentCollection = args )' );
+			if ( !isNull( properties[ property ] ) ) {
+				var args = { };
+				args[ property ] = properties[ property ];
+				evaluate( 'bean.set#property#( argumentCollection = args )' );
+			}
 		}
 		return bean;
 	}
