@@ -23,7 +23,8 @@ component {
 		variables.beanInfo = { };
 		variables.beanCache = { };
         variables.settersInfo = { };
-		variables.autoExclude = [ '/WEB-INF', '/Application.cfc' ];
+		variables.autoExclude = [ '/WEB-INF', '/Application.cfc',
+                                  'framework.cfc', 'ioc.cfc' ];
         variables.listeners = 0;
 		setupFrameworkDefaults();
 		return this;
@@ -607,7 +608,7 @@ component {
             throw 'singletonPattern and transientPattern are mutually exclusive';
         }
 				
-		variables.config.version = '0.4.9';
+		variables.config.version = '0.4.10';
 	}
 	
 	
