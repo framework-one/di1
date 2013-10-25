@@ -150,6 +150,18 @@ component {
 		return bean;
 	}
 	
+
+
+	//Given the name of a bean (by Name, by Type, or by Value), pupulate it with any variables 
+	public any function populate( any cfc, string keys = '', boolean trustKeys = false, boolean trim = false, deep = false ) {
+
+
+
+
+
+	}
+
+
 	
 	// empty the cache and reload all the singleton beans
 	// note: this does not reload the parent - if you have parent/child factories you
