@@ -1,4 +1,7 @@
 .project
 .settings
+mxunit
+tests/report
+tests/results
 WEB-INF
 settings.xml

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<project name="InjectOne" basedir="." default="help">
+
+  <property name="test.server" value="localhost"/>
+  <property name="test.port"   value="80"/>
+  <property name="mxunit.home" value="${basedir}/mxunit"/>
+
+  <target name="help">
+    <echo message="test - run the unit tests"/>
+  </target>
+
+  <target name="test" depends="clean">
+    <taskdef name="mxunittask" classname="org.mxunit.ant.MXUnitAntTask" classpath="${mxunit.home}/ant/lib/mxunit-ant.jar"/>
+    <mkdir dir="${basedir}/tests/report"/>
+    <mkdir dir="${basedir}/tests/results"/>
+    <mxunittask server="${test.server}" port="${test.port}"
+                outputdir="${basedir}/tests/results"
+                haltonerror="false" haltonfailure="false"
+                verbose="false"
+                errorproperty="testfailed" failureproperty="testfailed">
+      <testcase name="tests.AddBean" packageName="tests.AddBean"/>
+      <testcase name="tests.BeanInfo" packageName="tests.BeanInfo"/>
+      <testcase name="tests.Circular" packageName="tests.Circular"/>
+      <testcase name="tests.Constant" packageName="tests.Constant"/>
+      <testcase name="tests.DeclareBean" packageName="tests.DeclareBean"/>
+      <testcase name="tests.defaultarg" packageName="tests.defaultarg"/>
+      <testcase name="tests.Empty" packageName="tests.Empty"/>
+      <testcase name="tests.ExtraBeans" packageName="tests.ExtraBeans"/>
+      <testcase name="tests.InjectProperties" packageName="tests.InjectProperties"/>
+      <testcase name="tests.Mapping" packageName="tests.Mapping"/>
+      <testcase name="tests.Model" packageName="tests.Model"/>
+      <testcase name="tests.ModelService" packageName="tests.ModelService"/>
+      <testcase name="tests.OnLoad" packageName="tests.OnLoad"/>
+      <testcase name="tests.Parent" packageName="tests.Parent"/>
+      <testcase name="tests.singletonPattern" packageName="tests.singletonPattern"/>
+      <testcase name="tests.Transient" packageName="tests.Transient"/>
+      <testcase name="tests.transientPattern" packageName="tests.transientPattern"/>
+    </mxunittask>
+    <junitreport todir="${basedir}/tests/report">
+      <fileset dir="${basedir}/tests/results">
+        <include name="**/*.xml"/>
+      </fileset>
+      <report format="frames" todir="${basedir}/tests/report" styledir="${mxunit.home}/ant/xsl"/>
+    </junitreport>
+    <echo message="Test results: http://${test.server}:${test.port}/tests/report/index.html"/>
+    <fail message="Tests Failed!" if="testfailed"/>
+  </target>
+
+  <target name="clean">
+    <delete dir="${basedir}/tests/report" includeemptydirs="true"/>
+    <delete dir="${basedir}/tests/results" includeemptydirs="true"/>
+  </target>
+
+</project>
