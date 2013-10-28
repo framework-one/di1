@@ -116,7 +116,7 @@ component {
     }
 	
 	
-	// return true iff bean is known to be a singleton
+	// return true if bean is known to be a singleton
 	public boolean function isSingleton( string beanName ) {
 		discoverBeans( variables.folders );
 		if ( structKeyExists( variables.beanInfo, beanName ) ) {
@@ -150,7 +150,170 @@ component {
 		return bean;
 	}
 	
+
+
+	//Given the name of a cfc (by Name, by Type, or by Value), call the setters, 
+	// if defined by 
+	public any function populate( any cfc, struct data={}, string keys = '', boolean trustKeys = false, boolean trim = false, deep = false ) {
+		//get the cfc 
+		if(isSimpleValue(cfc)){
+			cfc = getBean(cfc);
+		}
+
+
+		if ( keys == '' ) {
+			if ( trustKeys ) {
+				// assume everything in the data struct can be set into the CFC
+				for ( var property in arguments.data ) {
+					try {
+						var args = { };
+						args[ property ] = ARGUMENTS.data[ property ];
+						if ( trim && isSimpleValue( args[ property ] ) ) args[ property ] = trim( args[ property ] );
+						// cfc[ 'set'&property ]( argumentCollection = args ); // ugh! no portable script version of this?!?!				
+
+						setProperty( cfc, property, args, trustKeys );
+					} catch ( any e ) {
+						throw(e);
+						
+					}
+				}
+			} else {
+				var setters = findImplicitAndExplicitSetters( cfc );
+				for ( var property in setters ) {
+					if ( structKeyExists( ARGUMENTS.data, property ) ) {
+						var args = { };
+						args[ property ] = ARGUMENTS.data[ property ];
+						if ( trim && isSimpleValue( args[ property ] ) ) args[ property ] = trim( args[ property ] );
+						// cfc[ 'set'&property ]( argumentCollection = args ); // ugh! no portable script version of this?!?!
+						setProperty( cfc, property, args );
+					} else if ( deep && structKeyExists( cfc, 'get' & property ) ) {
+						//look for a context property that starts with the property
+						for ( var key in ARGUMENTS.data ) {
+							if ( listFindNoCase( key, property, '.') ) {
+								try {
+									setProperty( cfc, key, { '#key#' = ARGUMENTS.data[ key ] } );
+								} catch ( any e ) {
+									throw(e);
+								}
+							}
+						}
+					}
+				}
+			}
+		} else {
+			var setters = findImplicitAndExplicitSetters( cfc );
+			var keyArray = listToArray( keys );
+			for ( var property in keyArray ) {
+				var trimProperty = trim( property );
+				if ( structKeyExists( setters, trimProperty ) || trustKeys ) {
+					if ( structKeyExists( ARGUMENTS.data, trimProperty ) ) {
+						var args = { };
+						args[ trimProperty ] = ARGUMENTS.data[ trimProperty ];
+						if ( trim && isSimpleValue( args[ trimProperty ] ) ) args[ trimProperty ] = trim( args[ trimProperty ] );
+						// cfc[ 'set'&trimproperty ]( argumentCollection = args ); // ugh! no portable script version of this?!?!
+						setProperty( cfc, trimProperty, args );
+					}
+				} else if ( deep ) {
+					if ( listLen( trimProperty, '.' ) > 1 ) {
+						var prop = listFirst( trimProperty, '.' );
+						if ( structKeyExists( cfc, 'get' & prop ) ) {
+                            setProperty( cfc, trimProperty, { '#trimProperty#' = ARGUMENTS.data[ trimProperty ] } );
+                        }
+					}
+				}
+			}
+		}
+		return cfc;
 	
+	}
+
+
+	private struct function findImplicitAndExplicitSetters( any cfc ) {
+		var baseMetadata = getMetadata( cfc );
+		var setters = { };
+			var md = { extends = baseMetadata };
+			do {
+				md = md.extends;
+				var implicitSetters = false;
+				// we have implicit setters if: accessors="true" or persistent="true"
+				if ( structKeyExists( md, 'persistent' ) && isBoolean( md.persistent ) ) {
+					implicitSetters = md.persistent;
+				}
+				if ( structKeyExists( md, 'accessors' ) && isBoolean( md.accessors ) ) {
+					implicitSetters = implicitSetters || md.accessors;
+				}
+				if ( structKeyExists( md, 'properties' ) ) {
+					// due to a bug in ACF9.0.1, we cannot use var property in md.properties,
+					// instead we must use an explicit loop index... ugh!
+					var n = arrayLen( md.properties );
+					for ( var i = 1; i <= n; ++i ) {
+						var property = md.properties[ i ];
+						if ( implicitSetters ||
+								structKeyExists( property, 'setter' ) && isBoolean( property.setter ) && property.setter ) {
+							setters[ property.name ] = 'implicit';
+						}
+					}
+				}
+			} while ( structKeyExists( md, 'extends' ) );
+			// cache it in the metadata (note: in Railo 3.2 metadata cannot be modified
+			// which is why we return the local setters structure - it has to be built
+			// on every controller call; fixed in Railo 3.3)
+			baseMetadata.__fw1_setters = setters;
+
+		// gather up explicit setters as well
+		for ( var member in cfc ) {
+			var method = cfc[ member ];
+			var n = len( member );
+			if ( isCustomFunction( method ) && left( member, 3 ) == 'set' && n > 3 ) {
+				var property = right( member, n - 3 );
+				setters[ property ] = 'explicit';
+			}
+		}
+		return setters;
+	}
+
+	function dumpT(objectToDump, condition){
+		if(condition){
+			dump(objectToDump); abort;
+		}
+	}
+
+	private void function setProperty( struct cfc, string property, struct args, boolean trustKeys=false ) {
+
+		if ( listLen( property, '.' ) > 1 ) { //Deal with sub structures
+			var firstObjName = listFirst( property, '.' );
+			var newProperty = listRest( property,  '.' );
+
+			args[ newProperty ] = args[ property ];
+			structDelete( args, property );
+
+
+			if ( structKeyExists( cfc , 'get' & firstObjName ) ) {
+				var obj = getProperty( cfc, firstObjName );
+				if ( !isNull( obj ) ) setProperty( obj, newProperty, args, trustKeys);
+			}
+
+
+		} else {
+			//should check for existence of property in cfc
+			if(trustKeys){
+				evaluate( 'cfc.set#property#( argumentCollection = args )' );
+			}
+			else {
+				//check if the property exists in the CFC
+				if(structKeyExists(cfc, "set#property#")){
+					evaluate( 'cfc.set#property#( argumentCollection = args )' );		
+				}
+			}
+			
+		}
+	}
+
+	private any function getProperty( struct cfc, string property ) {
+		if ( structKeyExists( cfc, 'get#property#' ) ) return evaluate( 'cfc.get#property#()' );
+	}
+
+
 	// empty the cache and reload all the singleton beans
 	// note: this does not reload the parent - if you have parent/child factories you
 	// are responsible for dealing with that logic (it's safe to reload a child but
