@@ -155,12 +155,10 @@ component {
 	//Given the name of a cfc (by Name, by Type, or by Value), call the setters, 
 	// if defined by 
 	public any function populate( any cfc, struct data={}, string keys = '', boolean trustKeys = false, boolean trim = false, deep = false ) {
-		var debug = cfc EQ "UserTwoLevel";
 		//get the cfc 
 		if(isSimpleValue(cfc)){
 			cfc = getBean(cfc);
 		}
-
 
 
 		if ( keys == '' ) {
@@ -171,10 +169,12 @@ component {
 						var args = { };
 						args[ property ] = ARGUMENTS.data[ property ];
 						if ( trim && isSimpleValue( args[ property ] ) ) args[ property ] = trim( args[ property ] );
-						// cfc[ 'set'&property ]( argumentCollection = args ); // ugh! no portable script version of this?!?!						
-						setProperty( cfc, property, args );
+						// cfc[ 'set'&property ]( argumentCollection = args ); // ugh! no portable script version of this?!?!				
+
+						setProperty( cfc, property, args, trustKeys );
 					} catch ( any e ) {
-						onPopulateError( cfc, property, ARGUMENTS.data );
+						throw(e);
+						
 					}
 				}
 			} else {
@@ -193,7 +193,7 @@ component {
 								try {
 									setProperty( cfc, key, { '#key#' = ARGUMENTS.data[ key ] } );
 								} catch ( any e ) {
-									onPopulateError( cfc, key, ARGUMENTS.data);
+									throw(e);
 								}
 							}
 						}
@@ -272,20 +272,40 @@ component {
 		return setters;
 	}
 
-	private void function setProperty( struct cfc, string property, struct args ) {
-		if ( listLen( property, '.' ) > 1 ) {
+	function dumpT(objectToDump, condition){
+		if(condition){
+			dump(objectToDump); abort;
+		}
+	}
+
+	private void function setProperty( struct cfc, string property, struct args, boolean trustKeys=false ) {
+
+		if ( listLen( property, '.' ) > 1 ) { //Deal with sub structures
 			var firstObjName = listFirst( property, '.' );
 			var newProperty = listRest( property,  '.' );
 
 			args[ newProperty ] = args[ property ];
 			structDelete( args, property );
 
+
 			if ( structKeyExists( cfc , 'get' & firstObjName ) ) {
 				var obj = getProperty( cfc, firstObjName );
-				if ( !isNull( obj ) ) setProperty( obj, newProperty, args );
+				if ( !isNull( obj ) ) setProperty( obj, newProperty, args, trustKeys);
 			}
+
+
 		} else {
-			evaluate( 'cfc.set#property#( argumentCollection = args )' );
+			//should check for existence of property in cfc
+			if(trustKeys){
+				evaluate( 'cfc.set#property#( argumentCollection = args )' );
+			}
+			else {
+				//check if the property exists in the CFC
+				if(structKeyExists(cfc, "set#property#")){
+					evaluate( 'cfc.set#property#( argumentCollection = args )' );		
+				}
+			}
+			
 		}
 	}
 
