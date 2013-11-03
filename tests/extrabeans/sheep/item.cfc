@@ -1,8 +1,8 @@
 ﻿component accessors="true" {
 	property beanfactory;
 
-    function init() {
-	    param name="application.itemCount" default="0";
+    function init( numeric start = 0 ) {
+	    param name="application.itemCount" default="#start#";
 	    this.itemNumber = ++application.itemCount;
     }
 
