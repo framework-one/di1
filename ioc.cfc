@@ -1,8 +1,8 @@
 component {
-    variables._fw1_version = "3.0_snapshot";
-    variables._di1_version = "1.0_snapshot";
+    variables._fw1_version = "3.1_snapshot";
+    variables._di1_version = "1.1_snapshot";
 /*
-    Copyright (c) 2010-2014, Sean Corfield
+    Copyright (c) 2010-2015, Sean Corfield
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -32,10 +32,7 @@ component {
             'framework.cfc', 'ioc.cfc',     // legacy FW/1 / DI/1
             // recent FW/1 + DI/1 exclusions:
             '/framework/ioc.cfc', '/framework/WireBoxAdapter.cfc',
-            '/framework/one.cfc',
-            // and Clojure-related exclusions:
-            '/framework/cfmljure.cfc', '/framework/cljcontroller.cfc',
-            '/framework/ioclj.cfc'
+            '/framework/one.cfc'
         ];
         variables.listeners = 0;
         setupFrameworkDefaults();
@@ -262,7 +259,7 @@ component {
 
     
     private struct function cleanMetadata( string cfc ) {
-        var baseMetadata = getComponentMetadata( cfc );
+        var baseMetadata = metadata( cfc );
         var iocMeta = { setters = { }, pruned = false };
         var md = { extends = baseMetadata };
         do {
@@ -328,10 +325,17 @@ component {
     }
     
     
+    // in case an extension point wants to override actual metadata retrieval:
+    private any function metadata( string dottedPath ) {
+        return getComponentMetadata( dottedPath );
+    }
+    
+    
     private string function deduceDottedPath( string baseMapping, string basePath ) {
-        var cfcPath = baseMapping;
+        var cfcPath = left( baseMapping, 1 ) == '/' ?
+            ( len( baseMapping ) > 1 ? right( baseMapping, len( baseMapping ) - 1 ) : '' ) :
+            getFileFromPath( baseMapping );
         var expPath = basePath;
-        if ( left( cfcPath, 1 ) == '/' ) cfcPath = right( cfcPath, len( cfcPath ) - 1 );
         var dotted = '';
         do {
             var mapped = cfcPath;
@@ -462,7 +466,8 @@ component {
 
 
     private boolean function isConstant ( string beanName ) {
-        return structKeyExists( variables.beanInfo[ beanName ], 'value');
+        return structKeyExists( variables.beanInfo, beanName ) &&
+            structKeyExists( variables.beanInfo[ beanName ], 'value' );
     }
 
     
