@@ -23,4 +23,4 @@ folder name, e.g.,
 Folder names may be singular or plural. DI/1 assumes that if a folder name ends in
 "s" it can remove that to get the singular name.
 
-See the [DI/1 documentation](http://framework-one.github.io/documentation/using-di-one.html) for more details.
+See the [DI/1 documentation](https://framework-one.github.io/documentation/4.3/using-di-one/) for more details.
